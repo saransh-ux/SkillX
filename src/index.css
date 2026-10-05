@@ -1,0 +1,71 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --bg-paper: #F4F1EA;
+    --text-ink: #171717;
+    --text-secondary: #66645F;
+    --border-line: #D8D2C4;
+    --accent-signal: #FF4D2E;
+  }
+
+  body {
+    background-color: #F4F1EA;
+    color: #171717;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  /* Monospace numbers with tabular figures for exact alignment */
+  .font-mono-numbers {
+    font-family: 'JetBrains Mono', monospace;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Subtle Technical Grid Background for Editorial Data Lab */
+.editorial-grid {
+  background-size: 32px 32px;
+  background-image: 
+    linear-gradient(to right, rgba(216, 210, 196, 0.4) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(216, 210, 196, 0.4) 1px, transparent 1px);
+}
+
+.editorial-grid-dense {
+  background-size: 16px 16px;
+  background-image: 
+    linear-gradient(to right, rgba(216, 210, 196, 0.35) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(216, 210, 196, 0.35) 1px, transparent 1px);
+}
+
+/* Custom crisp technical borders */
+.border-subtle {
+  border-color: #D8D2C4;
+}
+
+/* Technical crosshair markers for data lab aesthetic */
+.tech-crosshair {
+  position: relative;
+}
+.tech-crosshair::before,
+.tech-crosshair::after {
+  content: '';
+  position: absolute;
+  background-color: #171717;
+}
+
+/* Restrained custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #ECE7DE;
+}
+::-webkit-scrollbar-thumb {
+  background: #D8D2C4;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #B8B09F;
+}
