@@ -26,12 +26,12 @@ export default function Header({ activeSection, onNavigate }) {
 
   const navItems = [
     { id: 'overview', label: 'OVERVIEW' },
-    { id: 'skill-radar', label: 'SKILL RADAR' },
+    { id: 'skill-radar', label: 'MARKET PULSE' },
     { id: 'skill-genome', label: 'SKILL GENOME' },
-    { id: 'role-evolution', label: 'ROLE EVOLUTION' },
-    { id: 'industry-shift', label: 'INDUSTRY SHIFT' },
-    { id: 'the-signal', label: 'THE SIGNAL' },
-    { id: 'future-scan', label: 'FUTURE SCAN' }
+    { id: 'junior-success', label: 'JUNIOR MODEL' },
+    { id: 'senior-success', label: 'SENIOR MODEL' },
+    { id: 'career-scan', label: 'CAREER SCAN' },
+    { id: 'copilot', label: 'COPILOT' }
   ];
 
   return (

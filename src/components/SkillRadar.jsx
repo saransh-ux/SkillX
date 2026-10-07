@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getEmergingSkills } from '../api/skills';
+import { getTopSkills, getEmergingSkills } from '../api/skills';
 import { SignalLoading, SignalError, SignalEmpty } from './common/SignalState';
 import { Filter } from 'lucide-react';
 
@@ -17,7 +17,11 @@ export default function SkillRadar() {
       try {
         setLoading(true);
         setError(null);
-        const data = await getEmergingSkills();
+        // Call GET /api/skills/top with fallback
+        let data = await getTopSkills(20);
+        if (!data || data.length === 0) {
+          data = await getEmergingSkills();
+        }
         if (isMounted) {
           setSkills(data);
           setSelectedSkill(data[0] || null);
@@ -66,13 +70,13 @@ export default function SkillRadar() {
         <div className="flex flex-col md:flex-row md:items-end justify-between border-b border-[#D8D2C4] pb-6 mb-10 gap-4">
           <div>
             <div className="font-mono text-xs text-[#FF4D2E] font-semibold tracking-editorial uppercase mb-2">
-              01 / SKILL RADAR
+              01 / MARKET PULSE — TOP SKILL DEMAND
             </div>
             <h2 className="font-sans font-black text-3xl sm:text-4xl lg:text-5xl tracking-tight text-[#171717] uppercase">
-              EMERGING DEMAND RADAR
+              MARKET PULSE & DEMAND RADAR
             </h2>
             <p className="text-[#66645F] text-base mt-2 font-normal max-w-xl">
-              Skills showing the strongest signals of emerging demand across millions of job market observations.
+              Empirical market pulse tracking top skill demand volume, YoY acceleration, and co-occurrence cluster dynamics.
             </p>
           </div>
 

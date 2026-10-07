@@ -96,6 +96,64 @@ export async function getSkillTrend(skill) {
 }
 
 /**
+ * GET /api/skills/top
+ * Retrieves the top demanded skills across the workforce corpus.
+ */
+export async function getTopSkills(limit = 10, category = 'all') {
+  try {
+    const query = new URLSearchParams();
+    if (limit) query.set('limit', String(limit));
+    if (category && category !== 'all') query.set('category', category);
+    const queryString = query.toString();
+    const endpoint = `/api/skills/top${queryString ? `?${queryString}` : ''}`;
+
+    const data = await apiClient.get(endpoint);
+    const list = Array.isArray(data) ? data : data?.skills || data?.data || [];
+    if (list.length > 0) {
+      return list.map(normalizeSkill);
+    }
+    return mockSkills.slice(0, limit).map(normalizeSkill);
+  } catch (error) {
+    console.warn('[SKILL//X API] /api/skills/top unavailable, falling back to mock dataset:', error.message);
+    let filtered = mockSkills;
+    if (category && category !== 'all') {
+      filtered = mockSkills.filter(s => s.category.toLowerCase().includes(category.toLowerCase()));
+    }
+    return filtered.slice(0, limit).map(normalizeSkill);
+  }
+}
+
+/**
+ * GET /api/skills/{skill}/related
+ * Retrieves co-occurring and related skills for a given anchor skill.
+ */
+export async function getRelatedSkills(skill) {
+  const encoded = encodeURIComponent(skill);
+  try {
+    const data = await apiClient.get(`/api/skills/${encoded}/related`);
+    return data;
+  } catch (error) {
+    console.warn(`[SKILL//X API] /api/skills/${skill}/related fallback to mock:`, error.message);
+    const targetId = skill.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    const links = genomeNetwork.links.filter(
+      l => l.source === targetId || l.target === targetId
+    );
+    const neighborIds = links.map(l => (l.source === targetId ? l.target : l.source));
+    const relatedNodes = genomeNetwork.nodes.filter(n => neighborIds.includes(n.id));
+
+    return {
+      skill,
+      relatedSkills: relatedNodes.map(n => ({
+        id: n.id,
+        name: n.label,
+        weight: 0.75,
+        category: n.cluster
+      }))
+    };
+  }
+}
+
+/**
  * GET /api/skills/{skill}/relationships
  * Co-occurring links and related cluster nodes for a skill.
  */
@@ -120,3 +178,4 @@ export async function getSkillRelationships(skill) {
     };
   }
 }
+

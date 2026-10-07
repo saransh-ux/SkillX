@@ -4,6 +4,10 @@ import Hero from '../components/Hero';
 import IntelligenceStrip from '../components/IntelligenceStrip';
 import SkillRadar from '../components/SkillRadar';
 import SkillGenome from '../components/SkillGenome';
+import JuniorSuccess from '../components/JuniorSuccess';
+import SeniorSuccess from '../components/SeniorSuccess';
+import CareerScan from '../components/CareerScan';
+import Copilot from '../components/Copilot';
 import RoleEvolution from '../components/RoleEvolution';
 import IndustryShift from '../components/IndustryShift';
 import SignalInsight from '../components/SignalInsight';
@@ -27,6 +31,10 @@ export default function Dashboard() {
         'overview',
         'skill-radar',
         'skill-genome',
+        'junior-success',
+        'senior-success',
+        'career-scan',
+        'copilot',
         'role-evolution',
         'industry-shift',
         'the-signal',
@@ -60,22 +68,34 @@ export default function Dashboard() {
         {/* Continuous Horizontal Intelligence Strip */}
         <IntelligenceStrip onMetricClick={scrollToSection} />
 
-        {/* 01 / Skill Radar */}
+        {/* 01 / Market Pulse: Top Skill Demand Radar */}
         <SkillRadar />
 
-        {/* 02 / Skill Genome */}
+        {/* 02 / Skill Genome: Co-Occurrence Graph */}
         <SkillGenome />
 
-        {/* 03 / Role Evolution */}
+        {/* 03 / Junior Success: Technical Predictive Model */}
+        <JuniorSuccess />
+
+        {/* 04 / Senior Success: Big Five Psychometric Model */}
+        <SeniorSuccess />
+
+        {/* 05 / Career Scan: Evidence-Derived Synthesis */}
+        <CareerScan />
+
+        {/* 06 / Copilot: Conversational Analytics Interface */}
+        <Copilot />
+
+        {/* 07 / Role Evolution */}
         <RoleEvolution />
 
-        {/* 04 / Industry Shift */}
+        {/* 08 / Industry Shift */}
         <IndustryShift />
 
         {/* Featured Research Finding: THE SIGNAL */}
         <SignalInsight />
 
-        {/* 05 / Future Scan CTA */}
+        {/* 09 / Future Scan Simulator */}
         <FutureScan />
       </main>
 

@@ -45,7 +45,7 @@ export default function Footer({ onNavigate }) {
                   onClick={() => onNavigate && onNavigate('skill-radar')}
                   className="hover:text-[#FF4D2E] transition-colors cursor-pointer text-left"
                 >
-                  01 // SKILL RADAR
+                  01 // MARKET PULSE
                 </button>
               </li>
               <li>
@@ -58,18 +58,34 @@ export default function Footer({ onNavigate }) {
               </li>
               <li>
                 <button
-                  onClick={() => onNavigate && onNavigate('role-evolution')}
+                  onClick={() => onNavigate && onNavigate('junior-success')}
                   className="hover:text-[#FF4D2E] transition-colors cursor-pointer text-left"
                 >
-                  03 // ROLE EVOLUTION
+                  03 // JUNIOR MODEL
                 </button>
               </li>
               <li>
                 <button
-                  onClick={() => onNavigate && onNavigate('industry-shift')}
+                  onClick={() => onNavigate && onNavigate('senior-success')}
                   className="hover:text-[#FF4D2E] transition-colors cursor-pointer text-left"
                 >
-                  04 // INDUSTRY SHIFT
+                  04 // SENIOR MODEL
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => onNavigate && onNavigate('career-scan')}
+                  className="hover:text-[#FF4D2E] transition-colors cursor-pointer text-left"
+                >
+                  05 // CAREER SCAN
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => onNavigate && onNavigate('copilot')}
+                  className="hover:text-[#FF4D2E] transition-colors cursor-pointer text-left"
+                >
+                  06 // COPILOT
                 </button>
               </li>
               <li>
@@ -77,7 +93,7 @@ export default function Footer({ onNavigate }) {
                   onClick={() => onNavigate && onNavigate('future-scan')}
                   className="hover:text-[#FF4D2E] transition-colors cursor-pointer text-left"
                 >
-                  05 // FUTURE SCAN
+                  07 // FUTURE SCAN
                 </button>
               </li>
             </ul>
