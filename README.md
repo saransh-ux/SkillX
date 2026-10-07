@@ -124,27 +124,63 @@ In workforce analytics, precision is ethics. SKILL//X enforces strict scientific
 ## 🏗️ Technical Architecture
 
 ```
-                        ┌─────────────────────────────────────┐
-                        │      SKILL//X FRONTEND (Vite)       │
-                        │   React 19 • TailwindCSS • Lucide   │
-                        └──────────────────┬──────────────────┘
-                                           │
-                                  HTTP (Port 5173 /api)
-                                           │
-                        ┌──────────────────▼──────────────────┐
-                        │      FASTAPI INTELLIGENCE SERVER    │
-                        │          (Uvicorn Port 8000)        │
-                        └───────┬─────────────────────┬───────┘
-                                │                     │
-            ┌───────────────────▼──┐               ┌──▼───────────────────┐
-            │   ML INFERENCE ENG   │               │   DATASET CORPUS     │
-            │  Scikit-Learn • Joblib│              │  Pandas Data Loaders │
-            ├──────────────────────┤               ├──────────────────────┤
-            │ • JDS Logistic Reg   │               │ • Analytics Jobs.csv │
-            │ • SDS Random Forest  │               │ • JDS Skill Traits   │
-            │ • Jaccard Topologies │               │ • SDS Personality    │
-            └──────────────────────┘               └──────────────────────┘
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                               SKILL//X PRESENTATION LAYER                               │
+│                         React 19 • Vite 6 • Tailwind CSS • Lucide                      │
+├────────────────────────────────────────────────────────────────────────────────────────┤
+│  • Theme Engine (Dual Light Lab #F4F1EA / Dark Lab #11110F with CSS Custom Properties) │
+│  • Dynamic SVG Graphics: Mathematical Radar Canvas & Jaccard Force Topology Nodes      │
+│  • Telemetry Client (src/api/client.js) with strict fail-safe Mock/Real Backend isolation │
+└───────────────────────────────────────────┬────────────────────────────────────────────┘
+                                            │ Reverse Proxy (/api/*)
+                                            │ HTTP / JSON Payloads
+                                            ▼
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                              FASTAPI APPLICATION GATEWAY                                │
+│                          Python 3.11 • Uvicorn • Pydantic V2                           │
+├────────────────────────────────────────────────────────────────────────────────────────┤
+│  ROUTERS & CONTRACT VALIDATORS:                                                        │
+│  ├── /api/skills               ──> Skill demand ranking, regex canonicalizer & search  │
+│  ├── /api/skills/radar         ──> Multi-axis coordinate mapping & emergence metrics   │
+│  ├── /api/skill-genome         ──> Pairwise Jaccard co-occurrence topology matrix      │
+│  ├── /api/market/geography     ──> Regional hub distributions (Bengaluru, Pune, etc.)  │
+│  ├── /api/career-success/*     ──> JDS model telemetry & 5-feature inference service   │
+│  ├── /api/senior-success/*     ──> SDS model telemetry & Big Five inference service    │
+│  ├── /api/career-scan          ──> Multi-layer profile dossier synthesis engine        │
+│  └── /api/copilot              ──> Grounded analytical query resolver & evidence trail │
+└──────────────────────────┬─────────────────────────────┬───────────────────────────────┘
+                           │                             │
+                           ▼                             ▼
+┌──────────────────────────────────────┐  ┌──────────────────────────────────────────────┐
+│       MACHINE LEARNING ENGINES       │  │        EMPIRICAL DATASET CORPUS              │
+│       Scikit-Learn • Joblib Artifacts│  │        In-Memory Pandas Data Pipelines       │
+├──────────────────────────────────────┤  ├──────────────────────────────────────────────┤
+│ • Junior Model (JDS Cohort, N=692):  │  │ • 15,841 Tech Job Postings (Analytics Jobs)  │
+│   LogisticRegression + StandardScaler│  │   Regex-tokenized, punctuation-normalized,   │
+│   Holdout: 85.8% Balanced Accuracy   │  │   deduplicated canonical taxonomy.           │
+│ • Senior Model (SDS Cohort, N=805):  │  │ • Junior Data Science Traits (JDS Cohort)    │
+│   RandomForest (100 estimators)      │  │   5 continuous skill ratings [1.0 - 5.0].    │
+│   Holdout: 92.8% Balanced Accuracy   │  │ • Senior Data Science Psychometrics (SDS)    │
+│ • Graph Engine:                      │  │   Big Five Ocean personality [0.0 - 100.0].  │
+│   Pairwise Jaccard similarity bounds │  │ • Regional Metros & Role Profiles            │
+└──────────────────────────────────────┘  └──────────────────────────────────────────────┘
 ```
+
+### 🔄 Data Processing & Inference Pipeline
+
+1. **Ingestion & Canonicalization**:
+   - `Analytics Jobs.csv` is parsed into canonical terms via token normalization (e.g. converting `Pytorch`, `py-torch`, and `pytorch` into canonical `PyTorch`, eliminating token artifacts).
+   - Frequency counters calculate true posting prevalence:
+     $$\text{Prevalence}(S) = \frac{\text{Postings containing } S}{N_{\text{total}} = 15,841}$$
+2. **Topological Co-Occurrence Graphing**:
+   - Pairwise intersection across all $15,841$ records yields real Jaccard association metrics:
+     $$J(A, B) = \frac{|A \cap B|}{|A \cup B|}$$
+   - Filters out spurious pairings with dynamic support thresholds to ensure production-grade edge connectivity.
+3. **Dual ML Inference Gateways**:
+   - **Junior Success (`POST /api/career-success/predict`)**: Scales five continuous dimensions (`maths_stats`, `dashboard_storytelling`, `ai_ml`, `big_data`, `coding`) through a trained `StandardScaler` to classify salary-hike likelihood with log-odds transparency.
+   - **Senior Success (`POST /api/senior-success/predict`)**: Evaluates psychometric vectors across an ensemble of 100 estimators with tree-level feature variance.
+4. **Grounded Copilot Reasoning**:
+   - Queries are resolved deterministically against the in-memory dataset analytics cache—eliminating hallucinated statistics.
 
 ---
 
