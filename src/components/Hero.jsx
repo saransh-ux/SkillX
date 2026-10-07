@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowUpRight, TrendingUp, Compass, Cpu, Database, Network } from 'lucide-react';
+import { ArrowUpRight, TrendingUp } from 'lucide-react';
 
 export default function Hero({ onExplore }) {
   return (

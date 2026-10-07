@@ -51,7 +51,7 @@ export default function IntelligenceStrip({ onMetricClick }) {
         
         {/* Continuous Editorial Statistics Table */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-[#D8D2C4] border-x border-[#D8D2C4]">
-          {metrics.map((item, index) => (
+          {metrics.map((item) => (
             <div
               key={item.id}
               onClick={() => onMetricClick && onMetricClick(item.targetId)}

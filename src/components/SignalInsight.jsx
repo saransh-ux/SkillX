@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { ArrowRight, Plus, Equal, Sparkles, CheckCircle2, TrendingUp } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { getEmergingSkills } from '../api/skills';
 
 export default function SignalInsight() {
   const [activeRecipe, setActiveRecipe] = useState([
@@ -9,12 +9,37 @@ export default function SignalInsight() {
     'CLOUD'
   ]);
 
-  const optionalSkills = [
+  const [availableSkills, setAvailableSkills] = useState([
     'VECTOR DATABASES',
     'EVALUATION HARNESSES',
     'eBPF SECURITY',
     'LANGGRAPH'
-  ];
+  ]);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadCorpusSkills() {
+      try {
+        const list = await getEmergingSkills();
+        if (isMounted && list && list.length > 0) {
+          const names = list.map(s => s.name);
+          // Combine standard variables with names from corpus
+          const combined = Array.from(new Set([
+            'VECTOR DATABASES',
+            'EVALUATION HARNESSES',
+            'eBPF SECURITY',
+            'LANGGRAPH',
+            ...names.slice(0, 4)
+          ])).filter(s => !['AI AGENTS', 'RAG'].includes(s)).slice(0, 6);
+          setAvailableSkills(combined);
+        }
+      } catch {
+        // Fallback already preset in availableSkills
+      }
+    }
+    loadCorpusSkills();
+    return () => { isMounted = false; };
+  }, []);
 
   const toggleSkill = (skill) => {
     if (activeRecipe.includes(skill)) {
@@ -28,7 +53,39 @@ export default function SignalInsight() {
 
   // Determine synthesized role outcome based on ingredients
   const getSynthesizedRole = () => {
-    if (activeRecipe.includes('VECTOR DATABASES') && activeRecipe.includes('EVALUATION HARNESSES')) {
+    const hasVector = activeRecipe.includes('VECTOR DATABASES');
+    const hasEval = activeRecipe.includes('EVALUATION HARNESSES');
+    const hasEbpf = activeRecipe.includes('eBPF SECURITY');
+    const hasLangGraph = activeRecipe.includes('LANGGRAPH');
+
+    if (hasEbpf && hasLangGraph) {
+      return {
+        title: "SOVEREIGN MULTI-AGENT ARCHITECT",
+        rarity: "FRONTIER ELITE (TOP 1%)",
+        salaryPremium: "+46.8%",
+        coOccurrenceIndex: "13.4×",
+        status: "EXPONENTIAL SPIKE"
+      };
+    }
+    if (hasLangGraph) {
+      return {
+        title: "AUTONOMOUS AGENT ORCHESTRATION LEAD",
+        rarity: "SPECIALIZED (TOP 2%)",
+        salaryPremium: "+44.0%",
+        coOccurrenceIndex: "12.1×",
+        status: "MAXIMUM VELOCITY"
+      };
+    }
+    if (hasEbpf) {
+      return {
+        title: "ZERO-TRUST AGENT INFRASTRUCTURE SPECIALIST",
+        rarity: "CRITICAL DEFENSE (TOP 3%)",
+        salaryPremium: "+40.5%",
+        coOccurrenceIndex: "10.6×",
+        status: "HIGH RESILIENCE"
+      };
+    }
+    if (hasVector && hasEval) {
       return {
         title: "AUTONOMOUS SYSTEM ORCHESTRATOR",
         rarity: "FRONTIER ELITE (TOP 2%)",
@@ -37,7 +94,16 @@ export default function SignalInsight() {
         status: "MAXIMUM VELOCITY"
       };
     }
-    if (activeRecipe.includes('VECTOR DATABASES')) {
+    if (hasEval) {
+      return {
+        title: "AI EVALUATION & RELIABILITY ENGINEER",
+        rarity: "HIGH DEMAND (TOP 4%)",
+        salaryPremium: "+39.2%",
+        coOccurrenceIndex: "10.1×",
+        status: "RAPID ADOPTION"
+      };
+    }
+    if (hasVector) {
       return {
         title: "RETRIEVAL & AGENT SYSTEMS ENGINEER",
         rarity: "HIGH DEMAND (TOP 5%)",
@@ -128,7 +194,7 @@ export default function SignalInsight() {
           <div className="mt-8 pt-6 border-t border-[#D8D2C4] flex flex-wrap items-center justify-between gap-4 text-xs font-mono">
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-[#66645F] uppercase">TEST COMPOUND VARIABLE:</span>
-              {optionalSkills.map((opt) => {
+              {availableSkills.map((opt) => {
                 const isIncluded = activeRecipe.includes(opt);
                 return (
                   <button

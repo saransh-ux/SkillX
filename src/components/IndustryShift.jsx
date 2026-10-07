@@ -1,13 +1,49 @@
-import React, { useState } from 'react';
-import { mockIndustries } from '../data/mockIndustries';
-import { BarChart3, TrendingUp, Layers } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { getIndustryShifts } from '../api/industries';
+import { SignalLoading, SignalError } from './common/SignalState';
 
 export default function IndustryShift() {
+  const [datasets, setDatasets] = useState([]);
   const [selectedSkillKey, setSelectedSkillKey] = useState('ai-agents');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadData() {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await getIndustryShifts();
+        if (isMounted) {
+          setDatasets(data);
+          setLoading(false);
+        }
+      } catch (err) {
+        if (isMounted) {
+          setError(err.message || 'Failed to load industry shifts');
+          setLoading(false);
+        }
+      }
+    }
+    loadData();
+    return () => { isMounted = false; };
+  }, []);
 
   const currentDataset =
-    mockIndustries.find(item => item.skillKey === selectedSkillKey) ||
-    mockIndustries[0];
+    datasets.find(item => item.skillKey === selectedSkillKey) ||
+    datasets[0] || {
+      skillKey: 'ai-agents',
+      skillLabel: 'AI AGENTS',
+      definition: 'Autonomous execution frameworks',
+      medianAdoption: '60.0%',
+      sectors: []
+    };
+
+  const sortedSectors = [...(currentDataset.sectors || [])].sort((a, b) => b.adoptionRate - a.adoptionRate);
+  const leadingSector = sortedSectors[0] || { name: 'TECHNOLOGY', adoptionRate: 88 };
+  const trailingSector = sortedSectors[sortedSectors.length - 1] || { name: 'RETAIL', adoptionRate: 35 };
+  const ratio = (leadingSector.adoptionRate / (trailingSector.adoptionRate || 1)).toFixed(1);
 
   return (
     <section id="industry-shift" className="border-b border-[#D8D2C4] bg-[#F4F1EA] py-16 lg:py-24">
@@ -30,7 +66,7 @@ export default function IndustryShift() {
           {/* Interactive Skill Selector Tabs */}
           <div className="flex flex-wrap items-center gap-1 font-mono text-xs">
             <span className="text-[#66645F] uppercase mr-2 hidden sm:inline">SKILL METRIC:</span>
-            {mockIndustries.map((item) => (
+            {datasets.map((item) => (
               <button
                 key={item.skillKey}
                 onClick={() => setSelectedSkillKey(item.skillKey)}
@@ -48,6 +84,14 @@ export default function IndustryShift() {
 
         {/* Data Container */}
         <div className="border border-[#D8D2C4] bg-[#F4F1EA] p-6 lg:p-10 space-y-8">
+          
+          {loading && datasets.length === 0 && (
+            <SignalLoading message="ANALYZING CROSS-SECTOR SIGNALS..." />
+          )}
+
+          {error && datasets.length === 0 && (
+            <SignalError message={error} />
+          )}
           
           {/* Metadata bar */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-[#D8D2C4] pb-4 text-xs font-mono text-[#66645F] gap-2">
@@ -151,7 +195,7 @@ export default function IndustryShift() {
           {/* Editorial Comparative Note */}
           <div className="border-t border-[#D8D2C4] pt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between text-xs font-mono text-[#66645F] gap-2">
             <div>
-              OBSERVATION: <strong className="text-[#171717]">TECHNOLOGY</strong> leads {currentDataset.skillLabel} deployment velocity by 2.5× over <strong className="text-[#171717]">RETAIL</strong>.
+              OBSERVATION: <strong className="text-[#171717]">{leadingSector.name}</strong> leads {currentDataset.skillLabel} deployment velocity by {ratio}× over <strong className="text-[#171717]">{trailingSector.name}</strong>.
             </div>
             <div className="text-[#171717] font-semibold">
               DIFFUSION COEFFICIENT: 0.68 (FAST PROPAGATION)

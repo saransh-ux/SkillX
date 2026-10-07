@@ -1,15 +1,42 @@
-import React, { useState } from 'react';
-import { mockSkills } from '../data/mockSkills';
-import { ArrowUpRight, Filter, ChevronRight, Activity, Sparkles, TrendingUp } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { getEmergingSkills } from '../api/skills';
+import { SignalLoading, SignalError, SignalEmpty } from './common/SignalState';
+import { Filter } from 'lucide-react';
 
 export default function SkillRadar() {
-  const [selectedSkill, setSelectedSkill] = useState(mockSkills[0]);
+  const [skills, setSkills] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedSkill, setSelectedSkill] = useState(null);
   const [filterCategory, setFilterCategory] = useState('ALL');
   const [sortBy, setSortBy] = useState('emergence'); // 'emergence' | 'growth'
 
-  const categories = ['ALL', 'AI Architecture', 'Autonomous Systems', 'Data Systems', 'Security & Governance', 'Infrastructure'];
+  useEffect(() => {
+    let isMounted = true;
+    async function loadData() {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await getEmergingSkills();
+        if (isMounted) {
+          setSkills(data);
+          setSelectedSkill(data[0] || null);
+          setLoading(false);
+        }
+      } catch (err) {
+        if (isMounted) {
+          setError(err.message || 'Failed to acquire skill radar signals');
+          setLoading(false);
+        }
+      }
+    }
+    loadData();
+    return () => { isMounted = false; };
+  }, []);
 
-  const filteredSkills = mockSkills
+  const categories = ['ALL', ...Array.from(new Set(skills.map(s => s.category)))];
+
+  const filteredSkills = skills
     .filter(s => filterCategory === 'ALL' || s.category === filterCategory)
     .sort((a, b) => {
       if (sortBy === 'emergence') return b.emergenceScore - a.emergenceScore;
@@ -21,14 +48,15 @@ export default function SkillRadar() {
   const centerX = 240;
   const centerY = 240;
 
-  const radarPoints = mockSkills.map((skill, index) => {
-    // Distribute around 360 degrees with slight natural offset
-    const angle = (index * (360 / mockSkills.length) - 90) * (Math.PI / 180);
+  const radarPoints = skills.map((skill, index) => {
+    const angle = (index * (360 / (skills.length || 1)) - 90) * (Math.PI / 180);
     const radius = (skill.emergenceScore / 100) * 180;
     const x = centerX + radius * Math.cos(angle);
     const y = centerY + radius * Math.sin(angle);
     return { ...skill, x, y, angle };
   });
+
+  const signalPeak = skills.length ? Math.max(...skills.map(s => s.emergenceScore)) : 87;
 
   return (
     <section id="skill-radar" className="border-b border-[#D8D2C4] bg-[#F4F1EA] py-16 lg:py-24">
@@ -103,7 +131,7 @@ export default function SkillRadar() {
             {/* Top lab badge */}
             <div className="w-full flex items-center justify-between text-[11px] font-mono text-[#66645F] border-b border-[#D8D2C4] pb-2 mb-4">
               <span>RADIAL_POLAR_PLOT // v3</span>
-              <span className="text-[#FF4D2E] font-semibold">SIGNAL PEAK: 87</span>
+              <span className="text-[#FF4D2E] font-semibold">SIGNAL PEAK: {signalPeak}</span>
             </div>
 
             <div className="relative w-full max-w-[420px] aspect-square flex items-center justify-center">
@@ -161,14 +189,16 @@ export default function SkillRadar() {
 
                 {/* Radar Nodes */}
                 {radarPoints.map((point) => {
-                  const isSelected = selectedSkill.id === point.id;
+                  const isSelected = selectedSkill && selectedSkill.id === point.id;
                   const isHighSignal = point.emergenceScore >= 80;
+                  const isDimmed = filterCategory !== 'ALL' && point.category !== filterCategory;
 
                   return (
                     <g
                       key={point.id}
                       onClick={() => setSelectedSkill(point)}
-                      className="cursor-pointer group"
+                      className="cursor-pointer group transition-opacity duration-200"
+                      opacity={isDimmed ? 0.25 : 1}
                     >
                       {/* Selection Aura */}
                       {isSelected && (
@@ -258,8 +288,26 @@ export default function SkillRadar() {
               </div>
 
               {/* Rows */}
+              {loading && skills.length === 0 && (
+                <div className="p-4">
+                  <SignalLoading message="ANALYZING RADAR SIGNALS..." />
+                </div>
+              )}
+
+              {error && skills.length === 0 && (
+                <div className="p-4">
+                  <SignalError message={error} />
+                </div>
+              )}
+
+              {!loading && filteredSkills.length === 0 && (
+                <div className="p-4">
+                  <SignalEmpty message="NO SIGNAL DETECTED FOR THIS DOMAIN" />
+                </div>
+              )}
+
               {filteredSkills.map((skill, index) => {
-                const isSelected = selectedSkill.id === skill.id;
+                const isSelected = selectedSkill && selectedSkill.id === skill.id;
                 const isTopSignal = skill.emergenceScore >= 80;
 
                 return (

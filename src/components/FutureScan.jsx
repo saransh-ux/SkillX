@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { ArrowRight, Search, Sparkles, RefreshCw, AlertCircle, CheckCircle2, ChevronRight } from 'lucide-react';
+import { runFutureScan } from '../api/futureScan';
+import { SignalError } from './common/SignalState';
+import { ArrowRight, RefreshCw } from 'lucide-react';
 
 export default function FutureScan() {
   const [role, setRole] = useState('Software Engineer');
@@ -9,6 +11,7 @@ export default function FutureScan() {
 
   const [isScanning, setIsScanning] = useState(false);
   const [scanResult, setScanResult] = useState(null);
+  const [scanError, setScanError] = useState(null);
 
   const roleOptions = [
     'Software Engineer',
@@ -43,32 +46,33 @@ export default function FutureScan() {
     'Next 5 Years'
   ];
 
-  const handleRunScan = () => {
+  const handleRunScan = async () => {
     setIsScanning(true);
     setScanResult(null);
+    setScanError(null);
 
-    // Simulate research projection computation
-    setTimeout(() => {
+    const horizonMap = {
+      'Next 12 Months': 2027,
+      'Next 2 Years': 2028,
+      'Next 3 Years': 2029,
+      'Next 5 Years': 2031
+    };
+
+    const payload = {
+      role,
+      industry,
+      region,
+      horizon: horizonMap[forecast] || 2028
+    };
+
+    try {
+      const result = await runFutureScan(payload);
+      setScanResult(result);
+    } catch (err) {
+      setScanError(err.message || 'Signal query failed to generate projection');
+    } finally {
       setIsScanning(false);
-      setScanResult({
-        scanTimestamp: new Date().toISOString(),
-        confidenceScore: 94.2,
-        roleShiftIndex: "+38.6%",
-        obsolescenceRisk: "MODERATE (22%)",
-        emergentRequirements: [
-          { name: "AGENTIC WORKFLOW ORCHESTRATION", velocity: "+48.2%", importance: "CRITICAL" },
-          { name: "VECTOR CONTEXT INGESTION & RAG", velocity: "+41.5%", importance: "HIGH" },
-          { name: "EVALUATION & DRIFT HARNESSES", velocity: "+33.8%", importance: "HIGH" },
-          { name: "SOVEREIGN ENCLAVE GOVERNANCE", velocity: "+26.1%", importance: "STRATEGIC" }
-        ],
-        decayingRequirements: [
-          { name: "Standard REST CRUD Boilerplate", decay: "-42.0%" },
-          { name: "Manual Unit Test Generation", decay: "-55.4%" },
-          { name: "Static Schema Migration Scripts", decay: "-31.2%" }
-        ],
-        recommendation: `In ${industry} (${region}), the ${role} position will pivot from deterministic code execution to orchestrating compound non-deterministic AI tool chains. Priority investment: multi-agent runtime safety and high-throughput vector ingestion.`
-      });
-    }, 600);
+    }
   };
 
   return (
@@ -217,6 +221,13 @@ export default function FutureScan() {
 
         </div>
 
+        {/* Error State */}
+        {scanError && (
+          <div className="mt-8">
+            <SignalError message={scanError} onRetry={handleRunScan} />
+          </div>
+        )}
+
         {/* Scan Results Readout Section */}
         {scanResult && (
           <div className="mt-8 border border-[#171717] bg-[#F4F1EA] p-6 lg:p-8 animate-fadeIn">
@@ -225,7 +236,7 @@ export default function FutureScan() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-[#D8D2C4] pb-4 mb-6 gap-2 text-xs font-mono">
               <div className="flex items-center gap-2">
                 <span className="px-2 py-0.5 bg-[#171717] text-[#F4F1EA] font-bold">
-                  SCAN RESULT // 2026-PREDICTION
+                  {scanResult.isSimulated ? 'PROJECTION // LOCAL CORPUS SIMULATION' : 'PREDICTION // BACKEND MODEL RUNTIME'}
                 </span>
                 <span className="text-[#66645F]">CONFIDENCE: <strong className="text-[#171717]">{scanResult.confidenceScore}%</strong></span>
               </div>

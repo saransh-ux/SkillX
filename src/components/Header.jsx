@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowUpRight, Activity } from 'lucide-react';
 
 export default function Header({ activeSection, onNavigate }) {
   const [scrolled, setScrolled] = useState(false);

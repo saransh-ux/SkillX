@@ -1,10 +1,57 @@
-import React, { useState } from 'react';
-import { mockRoles } from '../data/mockRoles';
-import { ArrowRight, ArrowDown, Clock, GitCommit, Layers, Sparkles } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { getRoleEvolution, getRolesList } from '../api/roles';
+import { SignalLoading, SignalError } from './common/SignalState';
+import { ArrowRight, ArrowDown } from 'lucide-react';
 
 export default function RoleEvolution() {
+  const [roles, setRoles] = useState([]);
   const [selectedRoleId, setSelectedRoleId] = useState('software-engineer');
-  const role = mockRoles.find(r => r.id === selectedRoleId) || mockRoles[0];
+  const [role, setRole] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadRoles() {
+      const list = await getRolesList();
+      if (isMounted) {
+        setRoles(list);
+      }
+    }
+    loadRoles();
+    return () => { isMounted = false; };
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadRoleData() {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await getRoleEvolution(selectedRoleId);
+        if (isMounted) {
+          setRole(data);
+          setLoading(false);
+        }
+      } catch (err) {
+        if (isMounted) {
+          setError(err.message || 'Failed to acquire role trajectory');
+          setLoading(false);
+        }
+      }
+    }
+    loadRoleData();
+    return () => { isMounted = false; };
+  }, [selectedRoleId]);
+
+  const activeRole = role || {
+    id: selectedRoleId,
+    title: selectedRoleId.toUpperCase().replace(/-/g, ' '),
+    code: 'SOC:15-1252.00',
+    metrics: { skillHalfLife: '18 months', aiAugmentationRatio: '64%', velocityDelta: '+31.4%' },
+    timeline: [],
+    insight: 'Software engineering roles are rapidly evolving with AI orchestrations.'
+  };
 
   return (
     <section id="role-evolution" className="border-b border-[#D8D2C4] bg-[#F4F1EA] py-16 lg:py-24">
@@ -27,7 +74,11 @@ export default function RoleEvolution() {
           {/* Role Selector Tabs */}
           <div className="flex flex-wrap items-center gap-1 font-mono text-xs">
             <span className="text-[#66645F] uppercase mr-2 hidden sm:inline">SELECT ROLE:</span>
-            {mockRoles.map((r) => (
+            {(roles.length ? roles : [
+              { id: 'software-engineer', title: 'SOFTWARE ENGINEER' },
+              { id: 'data-engineer', title: 'DATA ENGINEER' },
+              { id: 'solutions-architect', title: 'SOLUTIONS ARCHITECT' }
+            ]).map((r) => (
               <button
                 key={r.id}
                 onClick={() => setSelectedRoleId(r.id)}
@@ -47,28 +98,40 @@ export default function RoleEvolution() {
         <div className="grid grid-cols-1 md:grid-cols-4 border border-[#D8D2C4] divide-y md:divide-y-0 md:divide-x divide-[#D8D2C4] bg-[#ECE7DE]/40 mb-10 text-xs font-mono">
           <div className="p-4">
             <span className="text-[#66645F] uppercase text-[10px]">OCCUPATION CODE</span>
-            <div className="font-bold text-[#171717] text-sm mt-0.5">{role.code}</div>
+            <div className="font-bold text-[#171717] text-sm mt-0.5">{activeRole.code}</div>
           </div>
           <div className="p-4">
             <span className="text-[#66645F] uppercase text-[10px]">SKILL HALF-LIFE</span>
-            <div className="font-bold text-[#171717] text-sm mt-0.5">{role.metrics.skillHalfLife}</div>
+            <div className="font-bold text-[#171717] text-sm mt-0.5">{activeRole.metrics.skillHalfLife}</div>
           </div>
           <div className="p-4">
             <span className="text-[#66645F] uppercase text-[10px]">AI AUGMENTATION RATIO</span>
-            <div className="font-bold text-[#FF4D2E] text-sm mt-0.5">{role.metrics.aiAugmentationRatio}</div>
+            <div className="font-bold text-[#FF4D2E] text-sm mt-0.5">{activeRole.metrics.aiAugmentationRatio}</div>
           </div>
           <div className="p-4">
             <span className="text-[#66645F] uppercase text-[10px]">ROLE RE-SKILL VELOCITY</span>
-            <div className="font-bold text-[#171717] text-sm mt-0.5">{role.metrics.velocityDelta}</div>
+            <div className="font-bold text-[#171717] text-sm mt-0.5">{activeRole.metrics.velocityDelta}</div>
           </div>
         </div>
 
         {/* Main Horizontal Timeline */}
         <div className="border border-[#D8D2C4] bg-[#F4F1EA] p-6 lg:p-8">
           
+          {loading && !role && (
+            <div className="mb-6">
+              <SignalLoading message="ANALYZING ROLE TRAJECTORY..." />
+            </div>
+          )}
+
+          {error && !role && (
+            <div className="mb-6">
+              <SignalError message={error} />
+            </div>
+          )}
+
           <div className="flex items-center justify-between border-b border-[#D8D2C4] pb-4 mb-8 text-xs font-mono text-[#66645F]">
             <div className="flex items-center gap-2">
-              <span className="font-bold text-[#171717]">{role.title}</span>
+              <span className="font-bold text-[#171717]">{activeRole.title}</span>
               <span>// 4-YEAR TRANSITION FLOW</span>
             </div>
             <span className="text-[#FF4D2E] font-semibold">2023 → 2026</span>
@@ -77,9 +140,8 @@ export default function RoleEvolution() {
           {/* Horizontal Step Columns with Transition Vectors */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 relative">
             
-            {role.timeline.map((step, idx) => {
+            {activeRole.timeline.map((step, idx) => {
               const isFinalYear = step.year === '2026';
-              const isFirstYear = step.year === '2023';
 
               return (
                 <div key={step.year} className="relative flex flex-col justify-between">
@@ -169,7 +231,7 @@ export default function RoleEvolution() {
                 RESEARCH INSIGHT
               </span>
               <p className="text-sm font-sans font-medium text-[#171717] leading-relaxed">
-                “{role.insight}”
+                “{activeRole.insight}”
               </p>
             </div>
             <div className="text-xs font-mono text-[#66645F] whitespace-nowrap pl-4 border-l border-[#D8D2C4] hidden lg:block">

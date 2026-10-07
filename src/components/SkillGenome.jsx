@@ -1,14 +1,44 @@
-import React, { useState } from 'react';
-import { genomeNetwork } from '../data/mockSkills';
-import { Network, Zap, Info, Maximize2, Share2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { getGenomeNetwork } from '../api/genome';
+import { SignalLoading, SignalError } from './common/SignalState';
 
 export default function SkillGenome() {
+  const [graphData, setGraphData] = useState({ nodes: [], links: [] });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [activeNodeId, setActiveNodeId] = useState('agents');
   const [activeCluster, setActiveCluster] = useState('all');
 
-  const { nodes, links } = genomeNetwork;
+  useEffect(() => {
+    let isMounted = true;
+    async function loadGenome() {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await getGenomeNetwork();
+        if (isMounted) {
+          setGraphData(data);
+          setLoading(false);
+        }
+      } catch (err) {
+        if (isMounted) {
+          setError(err.message || 'Failed to acquire genome network telemetry');
+          setLoading(false);
+        }
+      }
+    }
+    loadGenome();
+    return () => { isMounted = false; };
+  }, []);
 
-  const activeNode = nodes.find(n => n.id === activeNodeId) || nodes[0];
+  const { nodes, links } = graphData;
+
+  const activeNode = nodes.find(n => n.id === activeNodeId) || nodes[0] || {
+    id: 'agents',
+    label: 'AI AGENTS',
+    cluster: 'ai',
+    score: 82
+  };
 
   // Find connected links and neighbor node IDs
   const connectedLinks = links.filter(
@@ -93,6 +123,18 @@ export default function SkillGenome() {
           {/* Left / Center: Interactive SVG Knowledge Graph */}
           <div className="lg:col-span-8 relative min-h-[440px] sm:min-h-[500px] flex items-center justify-center overflow-hidden border border-[#D8D2C4] bg-[#F4F1EA]">
             
+            {loading && nodes.length === 0 && (
+              <div className="p-8 z-20">
+                <SignalLoading message="ANALYZING TOPOLOGICAL GRAPH..." />
+              </div>
+            )}
+
+            {error && nodes.length === 0 && (
+              <div className="p-8 z-20">
+                <SignalError message={error} />
+              </div>
+            )}
+
             {/* Editorial Background Grid Lines */}
             <div className="absolute inset-0 editorial-grid pointer-events-none opacity-60"></div>
 
