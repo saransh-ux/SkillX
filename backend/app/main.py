@@ -6,7 +6,19 @@ import logging
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
-from app.api import health, skills, roles, industries, future_scan
+from app.api import (
+    health,
+    skills,
+    roles,
+    industries,
+    future_scan,
+    genome,
+    market,
+    career_success,
+    senior_success,
+    career_scan,
+    copilot,
+)
 
 # Configure Logging
 logging.basicConfig(
@@ -40,6 +52,12 @@ app.include_router(skills.router, prefix=settings.API_V1_STR)
 app.include_router(roles.router, prefix=settings.API_V1_STR)
 app.include_router(industries.router, prefix=settings.API_V1_STR)
 app.include_router(future_scan.router, prefix=settings.API_V1_STR)
+app.include_router(genome.router, prefix=settings.API_V1_STR)
+app.include_router(market.router, prefix=settings.API_V1_STR)
+app.include_router(career_success.router, prefix=settings.API_V1_STR)
+app.include_router(senior_success.router, prefix=settings.API_V1_STR)
+app.include_router(career_scan.router, prefix=settings.API_V1_STR)
+app.include_router(copilot.router, prefix=settings.API_V1_STR)
 
 
 @app.get("/")

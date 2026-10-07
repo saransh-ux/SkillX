@@ -1,57 +1,69 @@
 import React, { useState, useEffect } from 'react';
-import { getRoleEvolution, getRolesList } from '../api/roles';
-import { SignalLoading, SignalError } from './common/SignalState';
-import { ArrowRight, ArrowDown } from 'lucide-react';
+import { getRoles, getRoleDetail, getRoleSkills } from '../services/api';
+import { Briefcase, Layers, MapPin, DollarSign, Clock, RefreshCw, AlertCircle } from 'lucide-react';
 
 export default function RoleEvolution() {
   const [roles, setRoles] = useState([]);
-  const [selectedRoleId, setSelectedRoleId] = useState('software-engineer');
-  const [role, setRole] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [selectedRoleName, setSelectedRoleName] = useState('Data Scientist');
+  const [roleDetail, setRoleDetail] = useState(null);
+  const [roleSkills, setRoleSkills] = useState([]);
+  const [loadingRoles, setLoadingRoles] = useState(true);
+  const [loadingDetail, setLoadingDetail] = useState(false);
   const [error, setError] = useState(null);
 
+  // Load available roles from API
   useEffect(() => {
-    let isMounted = true;
-    async function loadRoles() {
-      const list = await getRolesList();
-      if (isMounted) {
-        setRoles(list);
+    const fetchRoles = async () => {
+      setLoadingRoles(true);
+      setError(null);
+      try {
+        const resp = await getRoles({ limit: 12 });
+        const data = resp.data || [];
+        setRoles(data);
+        if (data.length > 0) {
+          // Select Data Scientist if present, else first
+          const defaultRole = data.find(r => r.designation.toLowerCase().includes('data scientist')) || data[0];
+          setSelectedRoleName(defaultRole.designation);
+        }
+      } catch (err) {
+        setError(err.message || 'Failed to fetch roles from /api/roles');
+      } finally {
+        setLoadingRoles(false);
       }
-    }
-    loadRoles();
-    return () => { isMounted = false; };
+    };
+    fetchRoles();
   }, []);
 
+  // Fetch role detail and role skills when selected role changes
   useEffect(() => {
+    if (!selectedRoleName) return;
+
     let isMounted = true;
-    async function loadRoleData() {
+    const fetchRoleData = async () => {
+      setLoadingDetail(true);
       try {
-        setLoading(true);
-        setError(null);
-        const data = await getRoleEvolution(selectedRoleId);
+        const [detailResp, skillsResp] = await Promise.all([
+          getRoleDetail(selectedRoleName),
+          getRoleSkills(selectedRoleName, 10).catch(() => ({ top_skills: [] })),
+        ]);
         if (isMounted) {
-          setRole(data);
-          setLoading(false);
+          setRoleDetail(detailResp);
+          setRoleSkills(skillsResp.top_skills || detailResp.top_skills || []);
         }
       } catch (err) {
         if (isMounted) {
-          setError(err.message || 'Failed to acquire role trajectory');
-          setLoading(false);
+          setError(err.message || `Failed to fetch role details for ${selectedRoleName}`);
         }
+      } finally {
+        if (isMounted) setLoadingDetail(false);
       }
-    }
-    loadRoleData();
-    return () => { isMounted = false; };
-  }, [selectedRoleId]);
+    };
+    fetchRoleData();
 
-  const activeRole = role || {
-    id: selectedRoleId,
-    title: selectedRoleId.toUpperCase().replace(/-/g, ' '),
-    code: 'SOC:15-1252.00',
-    metrics: { skillHalfLife: '18 months', aiAugmentationRatio: '64%', velocityDelta: '+31.4%' },
-    timeline: [],
-    insight: 'Software engineering roles are rapidly evolving with AI orchestrations.'
-  };
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedRoleName]);
 
   return (
     <section id="role-evolution" className="border-b border-[#D8D2C4] bg-[#F4F1EA] py-16 lg:py-24">
@@ -61,185 +73,214 @@ export default function RoleEvolution() {
         <div className="flex flex-col md:flex-row md:items-end justify-between border-b border-[#D8D2C4] pb-6 mb-10 gap-4">
           <div>
             <div className="font-mono text-xs text-[#FF4D2E] font-semibold tracking-editorial uppercase mb-2">
-              03 / ROLE EVOLUTION
+              03 / ROLE MARKET STRUCTURE
             </div>
             <h2 className="font-sans font-black text-3xl sm:text-4xl lg:text-5xl tracking-tight text-[#171717] uppercase">
-              ROLE TRAJECTORY TIMELINE
+              ROLE MARKET ARCHITECTURE
             </h2>
             <p className="text-[#66645F] text-base mt-2 font-normal max-w-xl">
-              Longitudinal tracking of skill core requirements across key workforce roles from 2023 through 2026.
+              Factual designation profiles derived directly from Analytics Jobs.csv. Real skill requirements, experience distribution, and geographic allocation without fabricated temporal timelines.
             </p>
           </div>
 
           {/* Role Selector Tabs */}
-          <div className="flex flex-wrap items-center gap-1 font-mono text-xs">
-            <span className="text-[#66645F] uppercase mr-2 hidden sm:inline">SELECT ROLE:</span>
-            {(roles.length ? roles : [
-              { id: 'software-engineer', title: 'SOFTWARE ENGINEER' },
-              { id: 'data-engineer', title: 'DATA ENGINEER' },
-              { id: 'solutions-architect', title: 'SOLUTIONS ARCHITECT' }
-            ]).map((r) => (
+          <div className="flex flex-wrap items-center gap-1 font-mono text-xs max-w-md">
+            <span className="text-[#66645F] uppercase mr-2 hidden sm:inline">ROLES:</span>
+            {roles.map((r) => (
               <button
-                key={r.id}
-                onClick={() => setSelectedRoleId(r.id)}
+                key={r.role_id}
+                onClick={() => setSelectedRoleName(r.designation)}
                 className={`px-3 py-1.5 border transition-colors cursor-pointer ${
-                  selectedRoleId === r.id
+                  selectedRoleName === r.designation
                     ? 'bg-[#171717] text-[#F4F1EA] border-[#171717] font-semibold'
                     : 'bg-transparent text-[#66645F] border-[#D8D2C4] hover:text-[#171717] hover:bg-[#ECE7DE]'
                 }`}
               >
-                {r.title}
+                {r.designation}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Selected Role Meta & Telemetry Strip */}
-        <div className="grid grid-cols-1 md:grid-cols-4 border border-[#D8D2C4] divide-y md:divide-y-0 md:divide-x divide-[#D8D2C4] bg-[#ECE7DE]/40 mb-10 text-xs font-mono">
-          <div className="p-4">
-            <span className="text-[#66645F] uppercase text-[10px]">OCCUPATION CODE</span>
-            <div className="font-bold text-[#171717] text-sm mt-0.5">{activeRole.code}</div>
-          </div>
-          <div className="p-4">
-            <span className="text-[#66645F] uppercase text-[10px]">SKILL HALF-LIFE</span>
-            <div className="font-bold text-[#171717] text-sm mt-0.5">{activeRole.metrics.skillHalfLife}</div>
-          </div>
-          <div className="p-4">
-            <span className="text-[#66645F] uppercase text-[10px]">AI AUGMENTATION RATIO</span>
-            <div className="font-bold text-[#FF4D2E] text-sm mt-0.5">{activeRole.metrics.aiAugmentationRatio}</div>
-          </div>
-          <div className="p-4">
-            <span className="text-[#66645F] uppercase text-[10px]">ROLE RE-SKILL VELOCITY</span>
-            <div className="font-bold text-[#171717] text-sm mt-0.5">{activeRole.metrics.velocityDelta}</div>
-          </div>
-        </div>
-
-        {/* Main Horizontal Timeline */}
-        <div className="border border-[#D8D2C4] bg-[#F4F1EA] p-6 lg:p-8">
-          
-          {loading && !role && (
-            <div className="mb-6">
-              <SignalLoading message="ANALYZING ROLE TRAJECTORY..." />
-            </div>
-          )}
-
-          {error && !role && (
-            <div className="mb-6">
-              <SignalError message={error} />
-            </div>
-          )}
-
-          <div className="flex items-center justify-between border-b border-[#D8D2C4] pb-4 mb-8 text-xs font-mono text-[#66645F]">
+        {/* Error Notification */}
+        {error && (
+          <div className="border border-[#FF4D2E] bg-[#FF4D2E]/10 p-4 mb-8 text-xs font-mono flex items-center justify-between text-[#171717]">
             <div className="flex items-center gap-2">
-              <span className="font-bold text-[#171717]">{activeRole.title}</span>
-              <span>// 4-YEAR TRANSITION FLOW</span>
+              <AlertCircle className="w-4 h-4 text-[#FF4D2E]" />
+              <span>{error}</span>
             </div>
-            <span className="text-[#FF4D2E] font-semibold">2023 → 2026</span>
           </div>
+        )}
 
-          {/* Horizontal Step Columns with Transition Vectors */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 relative">
-            
-            {activeRole.timeline.map((step, idx) => {
-              const isFinalYear = step.year === '2026';
+        {/* Loading state */}
+        {loadingRoles || loadingDetail ? (
+          <div className="border border-[#D8D2C4] bg-[#ECE7DE]/20 p-12 text-center text-xs font-mono text-[#66645F] flex flex-col items-center justify-center gap-3">
+            <RefreshCw className="w-5 h-5 animate-spin text-[#171717]" />
+            <span>FETCHING EMPIRICAL ROLE INTELLIGENCE FROM /api/roles...</span>
+          </div>
+        ) : roleDetail ? (
+          <div>
+            {/* Selected Role Meta & Telemetry Strip */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 border border-[#D8D2C4] divide-y sm:divide-y-0 sm:divide-x divide-[#D8D2C4] bg-[#ECE7DE]/40 mb-10 text-xs font-mono">
+              <div className="p-4">
+                <span className="text-[#66645F] uppercase text-[10px]">VERIFIED POSTINGS</span>
+                <div className="font-bold text-[#171717] text-lg mt-0.5">
+                  {roleDetail.posting_count.toLocaleString()}
+                </div>
+              </div>
+              <div className="p-4">
+                <span className="text-[#66645F] uppercase text-[10px]">MARKET SHARE</span>
+                <div className="font-bold text-[#FF4D2E] text-lg mt-0.5">
+                  {roleDetail.prevalence_pct.toFixed(2)}%
+                </div>
+              </div>
+              <div className="p-4">
+                <span className="text-[#66645F] uppercase text-[10px]">DOMINANT EXPERIENCE</span>
+                <div className="font-bold text-[#171717] text-sm mt-0.5">
+                  {roleDetail.experience_distribution?.dominant_range || '2-5 yrs'}
+                </div>
+              </div>
+              <div className="p-4">
+                <span className="text-[#66645F] uppercase text-[10px]">COMPENSATION BRACKET</span>
+                <div className="font-bold text-[#171717] text-sm mt-0.5">
+                  {roleDetail.salary_summary?.dominant_bracket || 'Market Standard'}
+                </div>
+              </div>
+            </div>
 
-              return (
-                <div key={step.year} className="relative flex flex-col justify-between">
-                  
-                  {/* Step Card / Column */}
-                  <div className={`p-5 border transition-all h-full flex flex-col justify-between ${
-                    isFinalYear
-                      ? 'border-[#FF4D2E] bg-[#FF4D2E]/5 shadow-none'
-                      : 'border-[#D8D2C4] bg-[#F4F1EA]'
-                  }`}>
-                    
-                    {/* Header: Year & Tag */}
-                    <div>
-                      <div className="flex items-center justify-between border-b border-[#D8D2C4] pb-2 mb-3">
-                        <span className={`font-mono text-2xl font-black ${
-                          isFinalYear ? 'text-[#FF4D2E]' : 'text-[#171717]'
-                        }`}>
-                          {step.year}
-                        </span>
-                        <span className={`text-[10px] font-mono px-1.5 py-0.5 border ${
-                          isFinalYear
-                            ? 'border-[#FF4D2E] text-[#FF4D2E] font-bold'
-                            : 'border-[#D8D2C4] text-[#66645F]'
-                        }`}>
-                          {isFinalYear ? 'FRONTIER' : `PHASE 0${idx + 1}`}
-                        </span>
-                      </div>
+            {/* Main Empirical Breakdown Columns */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 border border-[#D8D2C4] bg-[#F4F1EA] p-6 lg:p-8">
+              
+              {/* Left Column: Top Required Skills */}
+              <div className="lg:col-span-5 space-y-4">
+                <div className="flex items-center justify-between border-b border-[#D8D2C4] pb-2 text-xs font-mono">
+                  <span className="font-bold text-[#171717] uppercase flex items-center gap-1.5">
+                    <Briefcase className="w-3.5 h-3.5 text-[#FF4D2E]" /> TOP REQUIRED SKILLS
+                  </span>
+                  <span className="text-[#66645F]">WITHIN-ROLE PREVALENCE</span>
+                </div>
 
-                      <div className="text-[10px] font-mono uppercase text-[#66645F] font-semibold tracking-wider mb-4">
-                        {step.period}
-                      </div>
-
-                      {/* Skills List in Editorial Monospace format */}
-                      <div className="space-y-2 mb-6">
-                        <div className="text-[10px] font-mono text-[#8E8B83] uppercase">
-                          REQUIRED SKILL VECTOR:
-                        </div>
-                        {step.skills.map((skill) => (
-                          <div
-                            key={skill}
-                            className={`p-2 font-mono text-xs flex items-center justify-between border ${
-                              isFinalYear
-                                ? 'bg-[#F4F1EA] border-[#FF4D2E]/40 text-[#171717] font-bold'
-                                : 'bg-[#ECE7DE]/50 border-[#D8D2C4] text-[#171717]'
-                            }`}
-                          >
-                            <span>{skill}</span>
-                            {isFinalYear && (
-                              <span className="w-1.5 h-1.5 bg-[#FF4D2E] inline-block"></span>
+                <div className="space-y-2.5">
+                  {roleSkills.slice(0, 8).map((skill, index) => {
+                    const isCore = skill.prevalence_pct >= 25.0;
+                    return (
+                      <div
+                        key={skill.skill_id || skill.display_name}
+                        className="p-3 border border-[#D8D2C4] bg-[#ECE7DE]/30 hover:bg-[#ECE7DE] transition-colors font-mono text-xs"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="text-[#8E8B83]">0{index + 1}</span>
+                            <span className="font-bold text-[#171717]">{skill.display_name}</span>
+                            {isCore && (
+                              <span className="w-1.5 h-1.5 bg-[#FF4D2E] inline-block" title="Core Requirement"></span>
                             )}
                           </div>
-                        ))}
+                          <div className="text-right">
+                            <span className={`font-bold ${isCore ? 'text-[#FF4D2E]' : 'text-[#171717]'}`}>
+                              {skill.prevalence_pct.toFixed(1)}%
+                            </span>
+                            <span className="text-[10px] text-[#66645F] ml-1.5">({skill.posting_count} postings)</span>
+                          </div>
+                        </div>
+                        {/* Progress Bar */}
+                        <div className="w-full h-1 bg-[#D8D2C4] mt-2 overflow-hidden">
+                          <div
+                            className={`h-full ${isCore ? 'bg-[#FF4D2E]' : 'bg-[#171717]'}`}
+                            style={{ width: `${Math.min(100, skill.prevalence_pct)}%` }}
+                          />
+                        </div>
                       </div>
-                    </div>
+                    );
+                  })}
+                </div>
+              </div>
 
-                    {/* Paradigm Footnote */}
-                    <div className="pt-3 border-t border-[#D8D2C4] text-[11px] font-mono text-[#66645F]">
-                      <span className="block text-[9px] uppercase tracking-wider text-[#8E8B83]">PARADIGM:</span>
-                      <span className="text-[#171717] font-medium">{step.dominantParadigm}</span>
-                    </div>
-
+              {/* Middle Column: Experience & Salary Distributions */}
+              <div className="lg:col-span-4 space-y-6">
+                
+                {/* Experience Breakdown */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between border-b border-[#D8D2C4] pb-2 text-xs font-mono">
+                    <span className="font-bold text-[#171717] uppercase flex items-center gap-1.5">
+                      <Clock className="w-3.5 h-3.5 text-[#FF4D2E]" /> EXPERIENCE SPREAD
+                    </span>
+                    <span className="text-[#66645F]">
+                      AVG {roleDetail.experience_distribution?.average_min_years ?? 'N/A'}&ndash;{roleDetail.experience_distribution?.average_max_years ?? 'N/A'} YRS
+                    </span>
                   </div>
 
-                  {/* Flow Arrow (Desktop horizontal, Mobile vertical) */}
-                  {idx < 3 && (
-                    <div className="hidden md:flex absolute -right-3.5 top-1/2 -translate-y-1/2 z-10 w-7 h-7 bg-[#171717] text-[#F4F1EA] items-center justify-center shadow-sm">
-                      <ArrowRight className="w-3.5 h-3.5 text-[#F4F1EA]" />
-                    </div>
-                  )}
-
-                  {idx < 3 && (
-                    <div className="md:hidden flex justify-center py-2 text-[#66645F]">
-                      <ArrowDown className="w-4 h-4 text-[#FF4D2E]" />
-                    </div>
-                  )}
-
+                  <div className="space-y-2 text-xs font-mono">
+                    {(roleDetail.experience_distribution?.breakdown || []).slice(0, 4).map((exp) => (
+                      <div key={exp.bracket} className="p-2.5 border border-[#D8D2C4] bg-[#ECE7DE]/20 flex items-center justify-between">
+                        <span className="text-[#171717]">{exp.bracket}</span>
+                        <div className="text-right">
+                          <span className="font-bold text-[#171717]">{exp.percentage.toFixed(1)}%</span>
+                          <span className="text-[10px] text-[#66645F] ml-1">({exp.count})</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              );
-            })}
 
-          </div>
+                {/* Salary Breakdown if present */}
+                {roleDetail.salary_summary && roleDetail.salary_summary.brackets.length > 0 && (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between border-b border-[#D8D2C4] pb-2 text-xs font-mono">
+                      <span className="font-bold text-[#171717] uppercase flex items-center gap-1.5">
+                        <DollarSign className="w-3.5 h-3.5 text-[#FF4D2E]" /> COMPENSATION BRACKETS
+                      </span>
+                      <span className="text-[#66645F]">INR LAKHS/YR</span>
+                    </div>
 
-          {/* Editorial Key Insight Callout */}
-          <div className="mt-10 border-t border-[#D8D2C4] pt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-[#ECE7DE]/30 p-5 border">
-            <div className="flex items-start gap-4">
-              <span className="px-2 py-1 bg-[#171717] text-[#F4F1EA] text-[10px] font-mono font-bold uppercase tracking-wider whitespace-nowrap">
-                RESEARCH INSIGHT
-              </span>
-              <p className="text-sm font-sans font-medium text-[#171717] leading-relaxed">
-                “{activeRole.insight}”
-              </p>
+                    <div className="space-y-2 text-xs font-mono">
+                      {roleDetail.salary_summary.brackets.slice(0, 3).map((sal) => (
+                        <div key={sal.bracket} className="p-2.5 border border-[#D8D2C4] bg-[#ECE7DE]/20 flex items-center justify-between">
+                          <span className="text-[#171717]">{sal.bracket}</span>
+                          <div className="text-right">
+                            <span className="font-bold text-[#171717]">{sal.percentage.toFixed(1)}%</span>
+                            <span className="text-[10px] text-[#66645F] ml-1">({sal.count})</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+              </div>
+
+              {/* Right Column: Geographic Cluster Allocation */}
+              <div className="lg:col-span-3 space-y-4">
+                <div className="flex items-center justify-between border-b border-[#D8D2C4] pb-2 text-xs font-mono">
+                  <span className="font-bold text-[#171717] uppercase flex items-center gap-1.5">
+                    <MapPin className="w-3.5 h-3.5 text-[#FF4D2E]" /> GEOGRAPHIC HUBS
+                  </span>
+                  <span className="text-[#66645F]">TOP CITIES</span>
+                </div>
+
+                <div className="space-y-2 text-xs font-mono">
+                  {(roleDetail.location_summary || []).slice(0, 6).map((loc) => (
+                    <div key={loc.category} className="p-2.5 border border-[#D8D2C4] bg-[#ECE7DE]/30 flex items-center justify-between">
+                      <span className="font-bold text-[#171717]">{loc.category}</span>
+                      <span className="text-[#FF4D2E] font-semibold">{loc.percentage.toFixed(1)}%</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Explicit Data Caveat Box */}
+                <div className="pt-3 border-t border-[#D8D2C4] text-[10px] font-mono text-[#66645F] space-y-1">
+                  <div className="font-bold text-[#171717]">DATASET: Analytics Jobs.csv</div>
+                  <div>Sample Size: {roleDetail.sample_size.toLocaleString()} postings</div>
+                  <div className="text-[#8E8B83]">
+                    Cross-sectional empirical snapshot. No temporal growth or longitudinal evolution inferred.
+                  </div>
+                </div>
+
+              </div>
+
             </div>
-            <div className="text-xs font-mono text-[#66645F] whitespace-nowrap pl-4 border-l border-[#D8D2C4] hidden lg:block">
-              SOURCE: SKILL//X LONGITUDINAL REUTER INDEX
-            </div>
           </div>
-
-        </div>
+        ) : null}
 
       </div>
     </section>

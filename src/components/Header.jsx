@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { ArrowUpRight } from 'lucide-react';
 
 export default function Header({ activeSection, onNavigate }) {
   const [scrolled, setScrolled] = useState(false);
@@ -26,12 +27,12 @@ export default function Header({ activeSection, onNavigate }) {
 
   const navItems = [
     { id: 'overview', label: 'OVERVIEW' },
-    { id: 'skill-radar', label: 'MARKET PULSE' },
+    { id: 'skill-radar', label: 'SKILL RADAR' },
     { id: 'skill-genome', label: 'SKILL GENOME' },
-    { id: 'junior-success', label: 'JUNIOR MODEL' },
-    { id: 'senior-success', label: 'SENIOR MODEL' },
-    { id: 'career-scan', label: 'CAREER SCAN' },
-    { id: 'copilot', label: 'COPILOT' }
+    { id: 'role-evolution', label: 'ROLE MARKET' },
+    { id: 'industry-shift', label: 'GEOGRAPHY' },
+    { id: 'the-signal', label: 'MODEL EVIDENCE' },
+    { id: 'future-scan', label: 'CAREER SCAN' }
   ];
 
   return (
@@ -47,7 +48,7 @@ export default function Header({ activeSection, onNavigate }) {
                   SKILL<span className="text-[#FF4D2E]">//</span>X
                 </span>
                 <span className="text-[10px] font-mono px-1.5 py-0.5 bg-[#ECE7DE] border border-[#D8D2C4] text-[#66645F] uppercase tracking-wider">
-                  v1.4b
+                  PROD
                 </span>
               </div>
               <span className="text-[9px] font-mono tracking-widest text-[#66645F] uppercase mt-0.5">
@@ -82,8 +83,8 @@ export default function Header({ activeSection, onNavigate }) {
           {/* Right side: Year, Data Status & Telemetry */}
           <div className="hidden lg:flex items-center space-x-4 pl-4 border-l border-[#D8D2C4] text-xs font-mono">
             <div className="flex items-center gap-1.5 text-[#171717] font-medium">
-              <span className="text-[#66645F]">YEAR:</span>
-              <span className="px-1.5 py-0.5 bg-[#171717] text-[#F4F1EA] text-[11px] font-bold">2026</span>
+              <span className="text-[#66645F]">DATA:</span>
+              <span className="px-1.5 py-0.5 bg-[#171717] text-[#F4F1EA] text-[11px] font-bold">15,841 CORPUS</span>
             </div>
 
             <div className="flex items-center gap-2">
@@ -92,7 +93,7 @@ export default function Header({ activeSection, onNavigate }) {
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-[#FF4D2E]"></span>
               </span>
               <span className="text-[11px] font-semibold tracking-wider text-[#171717]">
-                DATA STATUS: <span className="text-[#171717]">LIVE</span>
+                STATUS: <span className="text-[#171717]">GROUNDED</span>
               </span>
             </div>
 

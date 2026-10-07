@@ -1,59 +1,89 @@
 import React, { useState, useEffect } from 'react';
-import { getGenomeNetwork } from '../api/genome';
-import { SignalLoading, SignalError } from './common/SignalState';
+import { getSkillGenome } from '../services/api';
+import { Network, RefreshCw, AlertCircle, Sparkles, Filter } from 'lucide-react';
 
 export default function SkillGenome() {
-  const [graphData, setGraphData] = useState({ nodes: [], links: [] });
+  const [focalSkill, setFocalSkill] = useState('');
+  const [genomeData, setGenomeData] = useState({ nodes: [], edges: [], metadata: null });
+  const [activeNodeId, setActiveNodeId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeNodeId, setActiveNodeId] = useState('agents');
-  const [activeCluster, setActiveCluster] = useState('all');
+
+  const focalPresets = [
+    { label: 'ALL SKILLS', value: '' },
+    { label: 'Python', value: 'Python' },
+    { label: 'SQL', value: 'SQL' },
+    { label: 'Machine Learning', value: 'Machine Learning' },
+    { label: 'Tableau', value: 'Tableau' },
+    { label: 'R', value: 'R' },
+  ];
+
+  const fetchGenome = async (focal) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const resp = await getSkillGenome({
+        focal_skill: focal || undefined,
+        limit_nodes: 24,
+        limit_edges: 40,
+        min_support: 5,
+      });
+      setGenomeData(resp);
+      if (resp.nodes && resp.nodes.length > 0) {
+        setActiveNodeId(resp.nodes[0].id);
+      } else {
+        setActiveNodeId(null);
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to load Skill Genome network');
+      setGenomeData({ nodes: [], edges: [], metadata: null });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    let isMounted = true;
-    async function loadGenome() {
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await getGenomeNetwork();
-        if (isMounted) {
-          setGraphData(data);
-          setLoading(false);
-        }
-      } catch (err) {
-        if (isMounted) {
-          setError(err.message || 'Failed to acquire genome network telemetry');
-          setLoading(false);
-        }
-      }
+    fetchGenome(focalSkill);
+  }, [focalSkill]);
+
+  const { nodes, edges, metadata } = genomeData;
+  const activeNode = nodes.find(n => n.id === activeNodeId) || nodes[0];
+
+  // Layout node positions deterministically on SVG canvas (680 x 460)
+  const width = 680;
+  const height = 460;
+  const centerX = width / 2;
+  const centerY = height / 2;
+
+  const positionedNodes = nodes.map((node, idx) => {
+    // If focal node matches, place near center
+    if (focalSkill && node.label.toLowerCase() === focalSkill.toLowerCase()) {
+      return { ...node, x: centerX, y: centerY };
     }
-    loadGenome();
-    return () => { isMounted = false; };
-  }, []);
+    // Arrange in concentric rings
+    const ring = idx < 8 ? 1 : 2;
+    const ringRadius = ring === 1 ? 130 : 210;
+    const countInRing = ring === 1 ? Math.min(nodes.length, 8) : Math.max(1, nodes.length - 8);
+    const ringIndex = ring === 1 ? idx : idx - 8;
+    const angle = (ringIndex * (360 / countInRing) - 90) * (Math.PI / 180);
+    const x = centerX + ringRadius * Math.cos(angle);
+    const y = centerY + ringRadius * Math.sin(angle);
+    return { ...node, x, y };
+  });
 
-  const { nodes, links } = graphData;
-
-  const activeNode = nodes.find(n => n.id === activeNodeId) || nodes[0] || {
-    id: 'agents',
-    label: 'AI AGENTS',
-    cluster: 'ai',
-    score: 82
+  const getNodePos = (id) => {
+    const node = positionedNodes.find(n => n.id === id);
+    return node ? { x: node.x, y: node.y } : { x: centerX, y: centerY };
   };
 
-  // Find connected links and neighbor node IDs
-  const connectedLinks = links.filter(
-    l => l.source === activeNodeId || l.target === activeNodeId
+  // Connected edges and neighbors for active node
+  const connectedEdges = edges.filter(
+    e => e.source === activeNodeId || e.target === activeNodeId
   );
   const neighborIds = new Set(
-    connectedLinks.map(l => (l.source === activeNodeId ? l.target : l.source))
+    connectedEdges.map(e => (e.source === activeNodeId ? e.target : e.source))
   );
-  neighborIds.add(activeNodeId);
-
-  // Helper to get node position by id
-  const getNodePos = (id) => {
-    const node = nodes.find(n => n.id === id);
-    return node ? { x: node.x, y: node.y } : { x: 0, y: 0 };
-  };
+  if (activeNodeId) neighborIds.add(activeNodeId);
 
   return (
     <section id="skill-genome" className="border-b border-[#D8D2C4] bg-[#F4F1EA] py-16 lg:py-24">
@@ -69,36 +99,44 @@ export default function SkillGenome() {
               SKILL GENOME NETWORK
             </h2>
             <p className="text-[#66645F] text-base mt-2 font-normal max-w-xl">
-              “Skills rarely evolve alone.” Topological graph mapping co-occurrence weight and cluster convergence across modern job architectures.
+              Empirical co-occurrence topology computed directly from Analytics Jobs.key_skills. Normalized via Jaccard similarity.
             </p>
           </div>
 
-          {/* Cluster Filter Toggles */}
-          <div className="flex items-center gap-1 font-mono text-xs">
-            <span className="text-[#66645F] uppercase mr-2 hidden sm:inline">VIEW:</span>
-            {[
-              { id: 'all', label: 'FULL GRAPH' },
-              { id: 'triad', label: 'EMERGING TRIAD' },
-              { id: 'cloud', label: 'CLOUD & INFRA' }
-            ].map(cluster => (
+          {/* Focal Skill Selector Toggles */}
+          <div className="flex flex-wrap items-center gap-1 font-mono text-xs">
+            <span className="text-[#66645F] uppercase mr-2 hidden sm:inline">FOCAL SKILL:</span>
+            {focalPresets.map(preset => (
               <button
-                key={cluster.id}
-                onClick={() => {
-                  setActiveCluster(cluster.id);
-                  if (cluster.id === 'triad') setActiveNodeId('agents');
-                  if (cluster.id === 'cloud') setActiveNodeId('k8s');
-                }}
+                key={preset.label}
+                onClick={() => setFocalSkill(preset.value)}
                 className={`px-3 py-1 border transition-colors cursor-pointer ${
-                  activeCluster === cluster.id
-                    ? 'bg-[#171717] text-[#F4F1EA] border-[#171717]'
-                    : 'bg-transparent text-[#66645F] border-[#D8D2C4] hover:text-[#171717]'
+                  focalSkill === preset.value
+                    ? 'bg-[#171717] text-[#F4F1EA] border-[#171717] font-semibold'
+                    : 'bg-transparent text-[#66645F] border-[#D8D2C4] hover:text-[#171717] hover:bg-[#ECE7DE]'
                 }`}
               >
-                {cluster.label}
+                {preset.label}
               </button>
             ))}
           </div>
         </div>
+
+        {/* Error Notification */}
+        {error && (
+          <div className="border border-[#FF4D2E] bg-[#FF4D2E]/10 p-4 mb-8 text-xs font-mono flex items-center justify-between text-[#171717]">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-[#FF4D2E]" />
+              <span>Network Error: {error}</span>
+            </div>
+            <button
+              onClick={() => fetchGenome(focalSkill)}
+              className="underline hover:text-[#FF4D2E] cursor-pointer"
+            >
+              RETRY
+            </button>
+          </div>
+        )}
 
         {/* Network Graph Container */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 border border-[#D8D2C4] bg-[#ECE7DE]/20 p-4 sm:p-8 relative">
@@ -106,276 +144,177 @@ export default function SkillGenome() {
           {/* Top Label & Coordinate Header */}
           <div className="lg:col-span-12 flex flex-wrap items-center justify-between border-b border-[#D8D2C4] pb-3 text-xs font-mono text-[#66645F]">
             <div className="flex items-center gap-3">
-              <span className="font-semibold text-[#171717]">GRAPH_ID: GENOME_V3.8</span>
+              <span className="font-semibold text-[#171717]">CORPUS: {metadata ? metadata.dataset : 'Analytics Jobs'}</span>
+              <span className="text-[#D8D2C4]">/</span>
+              <span>SAMPLE SIZE: {metadata ? metadata.sample_size.toLocaleString() : '15,841'}</span>
               <span className="text-[#D8D2C4]">/</span>
               <span>NODES: {nodes.length}</span>
               <span className="text-[#D8D2C4]">/</span>
-              <span>EDGES: {links.length}</span>
+              <span>EDGES: {edges.length}</span>
               <span className="text-[#D8D2C4]">/</span>
-              <span>DENSITY: 0.74</span>
+              <span>METRIC: {metadata ? metadata.association_metric.toUpperCase() : 'JACCARD'}</span>
             </div>
             <div className="flex items-center gap-2 text-[11px]">
               <span className="w-2 h-2 bg-[#FF4D2E] inline-block"></span>
-              <span className="text-[#171717] font-semibold">CO-EMERGENT TRIAD ACTIVE</span>
+              <span className="text-[#171717] font-semibold">MIN SUPPORT &ge; 5 POSTINGS</span>
             </div>
           </div>
 
           {/* Left / Center: Interactive SVG Knowledge Graph */}
           <div className="lg:col-span-8 relative min-h-[440px] sm:min-h-[500px] flex items-center justify-center overflow-hidden border border-[#D8D2C4] bg-[#F4F1EA]">
             
-            {loading && nodes.length === 0 && (
-              <div className="p-8 z-20">
-                <SignalLoading message="ANALYZING TOPOLOGICAL GRAPH..." />
+            {loading ? (
+              <div className="flex flex-col items-center justify-center gap-3 font-mono text-xs text-[#66645F]">
+                <RefreshCw className="w-5 h-5 animate-spin text-[#171717]" />
+                <span>BUILDING TOPOLOGICAL GRAPH FROM /api/skill-genome...</span>
               </div>
-            )}
-
-            {error && nodes.length === 0 && (
-              <div className="p-8 z-20">
-                <SignalError message={error} />
+            ) : nodes.length === 0 ? (
+              <div className="font-mono text-xs text-[#66645F]">
+                NO CO-OCCURRENCE NODES MATCHING CRITERIA.
               </div>
-            )}
+            ) : (
+              <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-full select-none">
+                {/* SVG Co-occurrence Edges */}
+                {edges.map((edge) => {
+                  const p1 = getNodePos(edge.source);
+                  const p2 = getNodePos(edge.target);
+                  const isConnected = activeNodeId && (edge.source === activeNodeId || edge.target === activeNodeId);
+                  const strokeWidth = Math.max(1, edge.association * 6);
 
-            {/* Editorial Background Grid Lines */}
-            <div className="absolute inset-0 editorial-grid pointer-events-none opacity-60"></div>
-
-            {/* Emerging Cluster Editorial Annotation Box */}
-            <div className="absolute top-4 left-4 z-10 bg-[#F4F1EA]/95 border-l-2 border-l-[#FF4D2E] border border-[#D8D2C4] p-3 text-xs max-w-xs shadow-none">
-              <div className="font-mono text-[9px] text-[#FF4D2E] font-bold tracking-widest uppercase">
-                EMERGING CLUSTER / 01
-              </div>
-              <div className="font-mono font-bold text-xs text-[#171717] mt-0.5">
-                AI AGENTS × RAG × VECTOR DATABASES
-              </div>
-              <div className="text-[10px] text-[#66645F] mt-1 font-mono flex items-center gap-2">
-                <span>STRENGTH: <strong className="text-[#171717]">0.94</strong></span>
-                <span>•</span>
-                <span>CORRELATION: <strong className="text-[#FF4D2E]">+42% YoY</strong></span>
-              </div>
-            </div>
-
-            {/* SVG Network Map */}
-            <svg
-              viewBox="0 0 700 440"
-              className="w-full h-full select-none"
-              style={{ minHeight: '440px' }}
-            >
-              <defs>
-                {/* Arrow markers if needed */}
-                <marker
-                  id="signal-arrow"
-                  viewBox="0 0 10 10"
-                  refX="18"
-                  refY="5"
-                  markerWidth="6"
-                  markerHeight="6"
-                  orient="auto-start-reverse"
-                >
-                  <path d="M 0 0 L 10 5 L 0 10 z" fill="#FF4D2E" />
-                </marker>
-              </defs>
-
-              {/* Edge Connections */}
-              {links.map((link, index) => {
-                const s = getNodePos(link.source);
-                const t = getNodePos(link.target);
-
-                const isHighlight = link.highlight;
-                const isConnectedToActive =
-                  link.source === activeNodeId || link.target === activeNodeId;
-                const isDimmed =
-                  activeCluster === 'triad'
-                    ? !link.emergent
-                    : activeNodeId && !isConnectedToActive && !isHighlight;
-
-                let strokeColor = '#D8D2C4';
-                let strokeWidth = Math.max(1, link.weight * 2.2);
-
-                if (isHighlight) {
-                  strokeColor = '#FF4D2E';
-                  strokeWidth = 2.4;
-                } else if (isConnectedToActive) {
-                  strokeColor = '#171717';
-                  strokeWidth = 1.8;
-                }
-
-                return (
-                  <g key={`${link.source}-${link.target}-${index}`}>
+                  return (
                     <line
-                      x1={s.x}
-                      y1={s.y}
-                      x2={t.x}
-                      y2={t.y}
-                      stroke={strokeColor}
-                      strokeWidth={strokeWidth}
-                      strokeOpacity={isDimmed ? 0.25 : 1}
-                      strokeDasharray={isHighlight ? "none" : link.weight < 0.7 ? "3,3" : "none"}
-                      className="transition-all duration-200"
+                      key={`${edge.source}-${edge.target}`}
+                      x1={p1.x}
+                      y1={p1.y}
+                      x2={p2.x}
+                      y2={p2.y}
+                      stroke={isConnected ? '#FF4D2E' : '#D8D2C4'}
+                      strokeWidth={isConnected ? strokeWidth + 1 : strokeWidth}
+                      strokeOpacity={isConnected ? 0.9 : 0.4}
+                      className="transition-colors duration-200"
                     />
+                  );
+                })}
 
-                    {/* Weight indicator on highlighted lines */}
-                    {isHighlight && (
-                      <circle
-                        cx={(s.x + t.x) / 2}
-                        cy={(s.y + t.y) / 2}
-                        r="2.5"
-                        fill="#FF4D2E"
-                      />
-                    )}
-                  </g>
-                );
-              })}
+                {/* SVG Nodes */}
+                {positionedNodes.map((node) => {
+                  const isActive = node.id === activeNodeId;
+                  const isNeighbor = neighborIds.has(node.id);
+                  const radius = Math.min(16, Math.max(7, Math.sqrt(node.count || 10) * 1.5));
 
-              {/* Node Rendering: Typography + Small Anchor Circles */}
-              {nodes.map((node) => {
-                const isSelected = activeNodeId === node.id;
-                const isNeighbor = neighborIds.has(node.id);
-                const isTriad = ['rag', 'agents', 'vector'].includes(node.id);
-                const isDimmed =
-                  activeCluster === 'triad'
-                    ? !isTriad
-                    : activeNodeId && !isSelected && !isNeighbor;
-
-                return (
-                  <g
-                    key={node.id}
-                    transform={`translate(${node.x}, ${node.y})`}
-                    onClick={() => setActiveNodeId(node.id)}
-                    className="cursor-pointer group"
-                    opacity={isDimmed ? 0.3 : 1}
-                  >
-                    {/* Anchor Circle */}
-                    <circle
-                      r={isSelected ? 6 : isTriad ? 5 : 4}
-                      fill={isTriad ? "#FF4D2E" : isSelected ? "#171717" : "#66645F"}
-                      stroke="#F4F1EA"
-                      strokeWidth="2"
-                      className="transition-transform duration-150 group-hover:scale-150"
-                    />
-
-                    {/* Outer pulse ring for active/selected */}
-                    {isSelected && (
-                      <circle
-                        r="12"
-                        fill="none"
-                        stroke="#171717"
-                        strokeWidth="1"
-                        strokeDasharray="2,2"
-                      />
-                    )}
-
-                    {/* Node Typography Label (Swiss International Style) */}
-                    <text
-                      x={0}
-                      y={-12}
-                      textAnchor="middle"
-                      fontFamily="JetBrains Mono"
-                      fontSize={isTriad ? "11" : "10"}
-                      fontWeight={isSelected || isTriad ? "700" : "500"}
-                      fill={isSelected ? "#171717" : isTriad ? "#FF4D2E" : "#171717"}
-                      className="select-none tracking-wider uppercase transition-colors"
+                  return (
+                    <g
+                      key={node.id}
+                      onClick={() => setActiveNodeId(node.id)}
+                      className="cursor-pointer group"
                     >
-                      {node.label}
-                    </text>
+                      {/* Aura when active */}
+                      {isActive && (
+                        <circle
+                          cx={node.x}
+                          cy={node.y}
+                          r={radius + 8}
+                          fill="none"
+                          stroke="#FF4D2E"
+                          strokeWidth="1.5"
+                          strokeDasharray="4,2"
+                        />
+                      )}
 
-                    {/* Micro-score indicator */}
-                    <text
-                      x={0}
-                      y={18}
-                      textAnchor="middle"
-                      fontFamily="JetBrains Mono"
-                      fontSize="8"
-                      fill="#8E8B83"
-                      className="select-none"
-                    >
-                      [{node.score}]
-                    </text>
-                  </g>
-                );
-              })}
-            </svg>
+                      {/* Main Node Circle */}
+                      <circle
+                        cx={node.x}
+                        cy={node.y}
+                        r={radius}
+                        fill={isActive ? '#FF4D2E' : isNeighbor ? '#171717' : '#8E8B83'}
+                        stroke="#F4F1EA"
+                        strokeWidth="2"
+                        className="transition-transform duration-150 group-hover:scale-125"
+                      />
 
-            {/* Bottom Graph Controls */}
-            <div className="absolute bottom-3 right-3 flex items-center gap-2 text-[10px] font-mono text-[#66645F] bg-[#F4F1EA]/90 px-2 py-1 border border-[#D8D2C4]">
-              <span>HOVER OR CLICK NODES TO TRACE PATHS</span>
-            </div>
-
+                      {/* Node Label */}
+                      <text
+                        x={node.x}
+                        y={node.y + radius + 11}
+                        textAnchor="middle"
+                        fill={isActive ? '#FF4D2E' : '#171717'}
+                        fontSize="10"
+                        fontWeight={isActive ? '700' : '500'}
+                        fontFamily="JetBrains Mono"
+                        className="pointer-events-none"
+                      >
+                        {node.label}
+                      </text>
+                    </g>
+                  );
+                })}
+              </svg>
+            )}
           </div>
 
-          {/* Right: Editorial Node Inspection Panel */}
+          {/* Right: Active Node Detail Dossier */}
           <div className="lg:col-span-4 flex flex-col justify-between space-y-6">
-            
-            <div className="border border-[#D8D2C4] bg-[#F4F1EA] p-5 space-y-4">
-              <div className="border-b border-[#D8D2C4] pb-3">
-                <div className="text-[10px] font-mono text-[#FF4D2E] uppercase tracking-wider font-bold">
-                  INSPECTION READOUT // NODE
+            {activeNode ? (
+              <div className="border border-[#D8D2C4] bg-[#F4F1EA] p-6 space-y-5">
+                <div>
+                  <div className="text-[10px] font-mono text-[#66645F] uppercase tracking-wider mb-1">
+                    SELECTED NODE // {activeNode.id}
+                  </div>
+                  <h3 className="font-sans font-bold text-2xl text-[#171717]">
+                    {activeNode.label}
+                  </h3>
+                  <div className="mt-2 text-xs font-mono text-[#66645F] flex items-center justify-between">
+                    <span>POSTINGS VOL:</span>
+                    <strong className="text-[#171717]">{activeNode.count?.toLocaleString() || 'N/A'}</strong>
+                  </div>
                 </div>
-                <h3 className="font-mono font-black text-2xl text-[#171717] mt-1">
-                  {activeNode.label}
-                </h3>
-                <div className="text-xs font-mono text-[#66645F] mt-0.5">
-                  AFFILIATED CLUSTER: <span className="text-[#171717] font-semibold">{activeNode.cluster.toUpperCase()}</span>
-                </div>
-              </div>
 
-              {/* Node Stats */}
-              <div className="grid grid-cols-2 gap-3 text-xs font-mono">
-                <div className="border border-[#D8D2C4] p-2.5 bg-[#ECE7DE]/50">
-                  <div className="text-[10px] text-[#66645F]">NODE WEIGHT</div>
-                  <div className="text-lg font-bold text-[#171717] mt-0.5">{activeNode.score} / 100</div>
-                </div>
-                <div className="border border-[#D8D2C4] p-2.5 bg-[#ECE7DE]/50">
-                  <div className="text-[10px] text-[#66645F]">CONNECTIONS</div>
-                  <div className="text-lg font-bold text-[#FF4D2E] mt-0.5">{connectedLinks.length} EDGES</div>
-                </div>
-              </div>
+                {/* Connected Edges Breakdown */}
+                <div className="pt-4 border-t border-[#D8D2C4] space-y-3">
+                  <div className="text-[10px] font-mono text-[#66645F] uppercase tracking-wider">
+                    VERIFIED CO-OCCURRENCE ASSOCIATIONS:
+                  </div>
 
-              {/* Edge Relationships */}
-              <div className="space-y-2 pt-2">
-                <div className="text-[11px] font-mono text-[#66645F] uppercase font-semibold">
-                  STRONGEST CO-OCCURRENCE EDGES:
-                </div>
-                
-                <div className="space-y-1.5 font-mono text-xs">
-                  {connectedLinks
-                    .sort((a, b) => b.weight - a.weight)
-                    .map((link, idx) => {
-                      const otherId = link.source === activeNodeId ? link.target : link.source;
-                      const otherNode = nodes.find(n => n.id === otherId);
+                  {connectedEdges.length === 0 ? (
+                    <div className="text-xs font-mono text-[#66645F]">
+                      No co-occurrences above minimum support threshold for this node.
+                    </div>
+                  ) : (
+                    <div className="space-y-2 text-xs font-mono max-h-60 overflow-y-auto pr-1">
+                      {connectedEdges.map((e) => {
+                        const partnerId = e.source === activeNodeId ? e.target : e.source;
+                        const partner = nodes.find(n => n.id === partnerId);
+                        const partnerLabel = partner ? partner.label : partnerId;
 
-                      return (
-                        <div
-                          key={idx}
-                          onClick={() => setActiveNodeId(otherId)}
-                          className="flex items-center justify-between p-2 border border-[#D8D2C4] hover:border-[#171717] bg-[#ECE7DE]/20 cursor-pointer transition-colors"
-                        >
-                          <span className="font-bold text-[#171717]">{otherNode?.label}</span>
-                          <div className="flex items-center gap-2">
-                            <div className="w-16 h-1.5 bg-[#D8D2C4]">
-                              <div
-                                className="h-full bg-[#FF4D2E]"
-                                style={{ width: `${link.weight * 100}%` }}
-                              />
+                        return (
+                          <div
+                            key={`${e.source}-${e.target}`}
+                            onClick={() => setActiveNodeId(partnerId)}
+                            className="p-2 border border-[#D8D2C4] bg-[#ECE7DE]/50 hover:bg-[#ECE7DE] cursor-pointer flex items-center justify-between"
+                          >
+                            <span className="font-bold text-[#171717]">{partnerLabel}</span>
+                            <div className="text-right">
+                              <span className="text-[#FF4D2E] font-bold">Jaccard: {e.association.toFixed(3)}</span>
+                              <span className="text-[#66645F] text-[10px] block">({e.cooccurrence} co-occurrences)</span>
                             </div>
-                            <span className="text-[10px] text-[#66645F]">{(link.weight * 100).toFixed(0)}%</span>
                           </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* Methodology Note */}
+                <div className="pt-3 border-t border-[#D8D2C4] text-[10px] font-mono text-[#66645F] space-y-1">
+                  <div>ASSOCIATION METRIC: JACCARD SIMILARITY</div>
+                  <div className="text-[#8E8B83]">J(A,B) = count(A &cap; B) / (count(A) + count(B) - count(A &cap; B))</div>
                 </div>
               </div>
-
-            </div>
-
-            {/* Research Finding Annotation */}
-            <div className="bg-[#171717] text-[#F4F1EA] p-4 text-xs font-mono space-y-2">
-              <div className="text-[10px] text-[#FF4D2E] uppercase font-bold tracking-wider">
-                TOPOLOGICAL FINDING
+            ) : (
+              <div className="border border-[#D8D2C4] bg-[#F4F1EA] p-6 text-xs font-mono text-[#66645F]">
+                Click on any node in the graph to inspect co-occurrences.
               </div>
-              <p className="text-[11px] text-[#D8D2C4] leading-relaxed">
-                The triad of <strong className="text-white">AI AGENTS</strong>, <strong className="text-white">RAG</strong>, and <strong className="text-white">VECTOR DATABASES</strong> now forms an indivisible technical nucleus in 74% of frontier AI engineering postings.
-              </p>
-            </div>
-
+            )}
           </div>
 
         </div>

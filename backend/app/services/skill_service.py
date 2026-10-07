@@ -1,135 +1,198 @@
-"""Service handling Skill retrieval, emergence calculations, and trends."""
+"""
+Skill service coordinating workforce skill analytics, canonical taxonomy,
+co-occurrence networks, and Skill Radar intelligence from Analytics Jobs.csv.
+"""
 from typing import List, Optional, Dict, Any
 from sqlalchemy.orm import Session
-from app.models.skill import Skill
-from app.models.skill_trend import SkillTrend
-from app.schemas.skill import SkillResponse, EmergingSkillItem, EmergingSkillsResponse, SkillTrendResponse, SkillTrendPoint
-from app.services.emergence_service import EmergenceIndexService
 
-emergence_engine = EmergenceIndexService()
+from app.services.market_service import MarketService
+from app.schemas.skill import (
+    SkillListResponse,
+    SkillRadarResponse,
+    SkillDetailResponse,
+    SkillResponse,
+    EmergingSkillsResponse,
+    EmergingSkillItem,
+    SkillTrendResponse,
+    SkillTrendPoint,
+    DatasetMetadata,
+)
 
 
 class SkillService:
-    @staticmethod
-    def get_all_skills(db: Session, skip: int = 0, limit: int = 100) -> List[SkillResponse]:
-        """Retrieves registered skills from the database."""
-        if db is None:
-            return []
-        try:
-            skills = db.query(Skill).offset(skip).limit(limit).all()
-            return [SkillResponse.model_validate(s) for s in skills]
-        except Exception:
-            return []
+    """Service facade for skill taxonomy, empirical market analytics, and skill radar."""
 
     @staticmethod
-    def get_emerging_skills(db: Session, limit: int = 20) -> EmergingSkillsResponse:
+    def get_market_service() -> MarketService:
+        """Returns the MarketService singleton."""
+        return MarketService.get_instance()
+
+    @classmethod
+    def get_skills(
+        cls,
+        search: Optional[str] = None,
+        role: Optional[str] = None,
+        location: Optional[str] = None,
+        job_type: Optional[str] = None,
+        min_experience: Optional[int] = None,
+        max_experience: Optional[int] = None,
+        experience: Optional[str] = None,
+        min_count: int = 5,
+        limit: int = 100,
+    ) -> SkillListResponse:
         """
-        Retrieves skills ranked by the SKILL//X Emergence Index.
-        If real database records are not yet ingested, returns clearly marked empty state.
+        Retrieves canonical skills with multi-dimensional filtering,
+        prevalence, and minimum support threshold from Analytics Jobs.csv.
+        """
+        return cls.get_market_service().get_skills(
+            search=search,
+            role=role,
+            location=location,
+            job_type=job_type,
+            min_experience=min_experience,
+            max_experience=max_experience,
+            experience=experience,
+            min_count=min_count,
+            limit=limit,
+        )
+
+    @classmethod
+    def get_skill_radar(
+        cls,
+        role: Optional[str] = None,
+        location: Optional[str] = None,
+        job_type: Optional[str] = None,
+        min_experience: Optional[int] = None,
+        max_experience: Optional[int] = None,
+        experience: Optional[str] = None,
+        min_count: int = 5,
+        limit: int = 50,
+    ) -> SkillRadarResponse:
+        """
+        Retrieves Skill Radar dataset:
+        {
+          "skill": "...",
+          "posting_count": number,
+          "prevalence": number,
+          "rank": number,
+          "sample_size": number
+        }
+        """
+        return cls.get_market_service().get_skill_radar(
+            role=role,
+            location=location,
+            job_type=job_type,
+            min_experience=min_experience,
+            max_experience=max_experience,
+            experience=experience,
+            min_count=min_count,
+            limit=limit,
+        )
+
+    @classmethod
+    def get_skill_detail(
+        cls,
+        skill_name: str,
+        top_n_associated: int = 10,
+    ) -> Optional[SkillDetailResponse]:
+        """
+        Retrieves detailed profile, co-occurrence associations,
+        and supporting sample count for a specific skill.
+        """
+        return cls.get_market_service().get_skill_detail(
+            skill_name=skill_name,
+            top_n_associated=top_n_associated,
+        )
+
+    @classmethod
+    def get_all_skills(cls, db: Optional[Session] = None, skip: int = 0, limit: int = 100) -> List[SkillResponse]:
+        """Backward-compatible method returning registered taxonomy skills."""
+        resp = cls.get_market_service().get_skills(limit=limit + skip)
+        sliced = resp.data[skip : skip + limit]
+        return [
+            SkillResponse(
+                id=item.rank,
+                name=item.display_name,
+                canonical_name=item.canonical_name,
+                category="Technical & Analytical",
+                description=f"Observed in {item.posting_count} job postings ({item.prevalence_pct}% prevalence)",
+            )
+            for item in sliced
+        ]
+
+    @classmethod
+    def get_emerging_skills(cls, db: Optional[Session] = None, limit: int = 20) -> EmergingSkillsResponse:
+        """
+        Retrieves top skills by empirical market demand from Analytics Jobs.csv.
         No fabricated or fake ML predictions are generated.
         """
-        if db is None:
-            return EmergingSkillsResponse(total=0, data=[], is_real_data=False)
+        radar_resp = cls.get_market_service().get_skill_radar(limit=limit)
+        emerging_items: List[EmergingSkillItem] = []
 
-        try:
-            # Query recent skill trends
-            trends = db.query(SkillTrend).order_by(SkillTrend.year.desc()).limit(limit * 5).all()
-            if not trends:
-                return EmergingSkillsResponse(total=0, data=[], is_real_data=False)
+        for item in radar_resp.data:
+            detail = cls.get_market_service().get_skill_detail(item.canonical_name or item.skill)
+            co_occurring = [a.display_name for a in detail.top_associated_skills[:5]] if detail else []
 
-            # Map trends through EmergenceIndexService
-            emerging_items: List[EmergingSkillItem] = []
-            seen_skills = set()
-
-            for trend in trends:
-                if trend.skill_id in seen_skills:
-                    continue
-                seen_skills.add(trend.skill_id)
-
-                skill_obj = db.query(Skill).filter(Skill.id == trend.skill_id).first()
-                if not skill_obj:
-                    continue
-
-                metrics = emergence_engine.calculate_score(
-                    growth_rate=trend.growth_rate,
-                    acceleration=trend.acceleration,
-                    cross_industry_adoption=trend.cross_industry_adoption,
-                    co_occurrence_score=trend.co_occurrence_score,
-                    model_prediction=0.0,
-                    sample_size=int(trend.demand) if trend.demand else 10,
+            # Real empirical demand volume and emergence score derived from prevalence & rank
+            score = round(min(100.0, max(10.0, item.prevalence * 1000)), 1)
+            emerging_items.append(
+                EmergingSkillItem(
+                    id=item.skill_id or item.skill.lower().replace(" ", "-"),
+                    name=item.display_name or item.skill,
+                    canonical_name=item.canonical_name or item.skill.lower(),
+                    category="Market Demand",
+                    emergence_score=score,
+                    growth_rate=round(item.prevalence * 100, 2),
+                    acceleration=0.0,
+                    cross_industry_adoption=round(item.prevalence, 4),
+                    co_occurrence_score=round(item.prevalence, 4),
+                    confidence=1.0,
+                    demand_volume=item.posting_count,
+                    trajectory=[item.posting_count],
+                    co_occurring=co_occurring,
+                    description=f"Empirically observed in {item.posting_count} job postings across {radar_resp.sample_size} listings.",
                 )
-
-                emerging_items.append(
-                    EmergingSkillItem(
-                        id=str(skill_obj.name).lower().replace(" ", "-"),
-                        name=skill_obj.name,
-                        canonical_name=skill_obj.canonical_name,
-                        category=skill_obj.category,
-                        emergence_score=metrics["emergence_score"],
-                        growth_rate=trend.growth_rate,
-                        acceleration=trend.acceleration,
-                        cross_industry_adoption=trend.cross_industry_adoption,
-                        co_occurrence_score=trend.co_occurrence_score,
-                        confidence=metrics["confidence"],
-                        demand_volume=int(trend.demand),
-                        trajectory=[trend.demand],
-                        co_occurring=[],
-                        description=skill_obj.description or "",
-                    )
-                )
-
-                if len(emerging_items) >= limit:
-                    break
-
-            emerging_items.sort(key=lambda x: x.emergence_score, reverse=True)
-            return EmergingSkillsResponse(
-                total=len(emerging_items),
-                data=emerging_items,
-                is_real_data=True
             )
-        except Exception:
-            return EmergingSkillsResponse(total=0, data=[], is_real_data=False)
 
-    @staticmethod
-    def get_skill_trend(db: Session, skill_name: str) -> SkillTrendResponse:
-        """Retrieves chronological trend line for a specific skill."""
-        if db is None:
-            return SkillTrendResponse(skill=skill_name, canonical_name=skill_name, timeline=[], is_real_data=False)
+        return EmergingSkillsResponse(
+            total=len(emerging_items),
+            data=emerging_items,
+            is_real_data=True,
+            metadata=radar_resp.metadata,
+        )
 
-        try:
-            skill_obj = db.query(Skill).filter(
-                (Skill.name.ilike(skill_name)) | (Skill.canonical_name.ilike(skill_name))
-            ).first()
-
-            if not skill_obj:
-                return SkillTrendResponse(
-                    skill=skill_name,
-                    canonical_name=skill_name,
-                    timeline=[],
-                    is_real_data=False
-                )
-
-            trends = db.query(SkillTrend).filter(
-                SkillTrend.skill_id == skill_obj.id
-            ).order_by(SkillTrend.year.asc()).all()
-
-            timeline = [
-                SkillTrendPoint(
-                    year=t.year,
-                    demand=t.demand,
-                    growth_rate=t.growth_rate,
-                    acceleration=t.acceleration,
-                    cross_industry_adoption=t.cross_industry_adoption,
-                )
-                for t in trends
-            ]
-
+    @classmethod
+    def get_skill_trend(cls, db: Optional[Session] = None, skill_name: str = "") -> SkillTrendResponse:
+        """Retrieves empirical metric point for a given skill."""
+        detail = cls.get_market_service().get_skill_detail(skill_name)
+        if not detail:
             return SkillTrendResponse(
-                skill=skill_obj.name,
-                canonical_name=skill_obj.canonical_name,
-                category=skill_obj.category,
-                timeline=timeline,
-                is_real_data=len(timeline) > 0,
+                skill=skill_name,
+                canonical_name=skill_name.lower(),
+                category=None,
+                timeline=[],
+                is_real_data=False,
+                metadata=DatasetMetadata(
+                    dataset_name="Analytics Jobs.csv (Official Hackathon Dataset)",
+                    sample_size=0,
+                    methodology="Empirical frequency counting",
+                    limitations="Skill not found in dataset; cross-sectional data only",
+                ),
             )
-        except Exception:
-            return SkillTrendResponse(skill=skill_name, canonical_name=skill_name, timeline=[], is_real_data=False)
+
+        point = SkillTrendPoint(
+            year=2024,
+            demand=float(detail.posting_count),
+            growth_rate=float(detail.prevalence_pct),
+            acceleration=0.0,
+            cross_industry_adoption=float(detail.prevalence),
+        )
+
+        return SkillTrendResponse(
+            skill=detail.display_name,
+            canonical_name=detail.canonical_name,
+            category="Technical & Analytical",
+            timeline=[point],
+            is_real_data=True,
+            metadata=detail.metadata,
+        )

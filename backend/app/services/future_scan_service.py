@@ -22,9 +22,9 @@ class FutureScanService:
             emerging_skills=[],
             declining_skills=[],
             rising_skill_combinations=[],
-            role_evolution_summary=f"Forecast pipeline ready for {request.role} in {request.industry}. Waiting for trained model checkpoint.",
+            role_evolution_summary=f"Future temporal forecasting is not supported by the cross-sectional dataset. Use Career Scan (/api/career-scan) for grounded multi-layer evaluation.",
             confidence_score=0.0,
             supporting_signals=[],
             is_real_data=False,
-            message="No fabricated ML predictions are returned. Ingest dataset and train model via ml/training/train_demand_model.py to generate live inferences."
+            message="No speculative temporal forecasts are supported. Grounded intelligence is provided via POST /api/career-scan."
         )

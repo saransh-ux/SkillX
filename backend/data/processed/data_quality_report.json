@@ -1,0 +1,90 @@
+[
+  {
+    "dataset": "Analytics Jobs",
+    "raw_rows": 15841,
+    "cleaned_rows": 14840,
+    "duplicates_removed": 1001,
+    "missing_values_raw": {
+      "s_no": 0,
+      "experience": 0,
+      "job_description": 3508,
+      "job_desig": 0,
+      "job_type": 12011,
+      "key_skills": 1,
+      "location": 0,
+      "salary": 0
+    },
+    "missing_values_clean": {
+      "s_no": 0,
+      "experience": 0,
+      "job_description": 3371,
+      "job_desig": 0,
+      "job_type": 11567,
+      "key_skills": 1,
+      "location": 0,
+      "salary": 0
+    },
+    "invalid_rows": 0,
+    "usable_percentage": 93.68,
+    "total_extracted_skills": 73229
+  },
+  {
+    "dataset": "Data Science Jobs",
+    "raw_rows": 1602,
+    "cleaned_rows": 1602,
+    "duplicates_removed": 0,
+    "missing_values_raw": {
+      "reference_no": 0,
+      "company_name": 0,
+      "job_title": 0,
+      "min_experience": 0,
+      "avg_salary": 0,
+      "min_salary": 0,
+      "max_salary": 0,
+      "num_of_jobs": 0
+    },
+    "missing_values_clean": {
+      "company_name": 0,
+      "job_title": 0,
+      "avg_salary_lakhs": 0,
+      "min_experience": 0,
+      "num_of_jobs": 0
+    },
+    "invalid_rows": 0,
+    "usable_percentage": 100.0
+  },
+  {
+    "dataset": "JDS Skill Traits",
+    "raw_rows": 139,
+    "cleaned_rows": 118,
+    "duplicates_removed": 21,
+    "missing_values_raw": {
+      "id": 0,
+      "big_data_skills": 0,
+      "maths-stats_skills": 0,
+      "coding_skills": 0,
+      "ai_and_ml_skills": 0,
+      "dashboard_and_storytelling_skills": 0,
+      "salary_hike_high_or_low": 0
+    },
+    "invalid_rows": 0,
+    "usable_percentage": 84.89
+  },
+  {
+    "dataset": "SDS Personality Traits",
+    "raw_rows": 161,
+    "cleaned_rows": 161,
+    "duplicates_removed": 0,
+    "missing_values_raw": {
+      "id": 0,
+      "neuroticism": 0,
+      "extraversion": 0,
+      "openness_to_experience": 0,
+      "agreeableness": 0,
+      "conscientiousness": 0,
+      "success__classification__high_low": 0
+    },
+    "invalid_rows": 0,
+    "usable_percentage": 100.0
+  }
+]

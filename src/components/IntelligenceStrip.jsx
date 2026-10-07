@@ -1,64 +1,47 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { ArrowUpRight } from 'lucide-react';
-import { getMarketSummary } from '../api/market';
 
 export default function IntelligenceStrip({ onMetricClick }) {
-  const [market, setMarket] = useState(null);
-
-  useEffect(() => {
-    let isMounted = true;
-    async function loadSummary() {
-      try {
-        const data = await getMarketSummary();
-        if (isMounted) setMarket(data);
-      } catch (err) {
-        console.warn('Market summary load error:', err);
-      }
-    }
-    loadSummary();
-    return () => { isMounted = false; };
-  }, []);
-
   const metrics = [
     {
-      id: "market-corpus",
+      id: "emerging-skills",
       targetId: "skill-radar",
-      code: "DATA / 01",
-      number: market?.sampleSize ? (market.sampleSize.includes('M') ? market.sampleSize : '4.82M') : '4.82M',
-      label: "EMPIRICAL CORPUS",
-      subtext: "Job postings & records",
-      delta: "VERIFIED",
-      badge: "DATASET"
+      code: "METRIC / 01",
+      number: "15,841",
+      label: "TOTAL POSTINGS ANALYZED",
+      subtext: "Analytics Jobs corpus",
+      delta: "100% REAL",
+      badge: "GROUNDED"
     },
     {
       id: "skill-combinations",
       targetId: "skill-genome",
-      code: "NETWORK / 02",
-      number: String(market?.activeClusters || 18),
-      label: "ACTIVE SKILL CLUSTERS",
-      subtext: `Density: ${market?.networkDensity || '0.74'} index`,
-      delta: market?.topDemandGrowth || "+37.4%",
-      badge: "CO-OCCURRENCE"
+      code: "METRIC / 02",
+      number: "20",
+      label: "CANONICAL HUBS",
+      subtext: "Skill Genome co-occurrence network",
+      delta: "JACCARD",
+      badge: "TOPOLOGY"
     },
     {
-      id: "junior-predictive",
-      targetId: "junior-success",
-      code: "MODEL / 03",
-      number: market?.juniorModelMetric ? market.juniorModelMetric.split('%')[0] + '%' : "84.1%",
-      label: "JUNIOR SALARY-HIKE ACCURACY",
-      subtext: "Cross-validated accuracy",
-      delta: "SIGNAL",
-      badge: "CLASSIFIER"
+      id: "roles-evolving",
+      targetId: "the-signal",
+      code: "METRIC / 03",
+      number: "85.8%",
+      label: "CAREER MODEL BALANCED ACC",
+      subtext: "JDS Skill Traits (Logistic Regression)",
+      delta: "N=692",
+      badge: "VALIDATED"
     },
     {
-      id: "senior-predictive",
-      targetId: "senior-success",
-      code: "MODEL / 04",
-      number: market?.seniorModelMetric ? market.seniorModelMetric.split(' ')[0] : "0.86",
-      label: "SENIOR SUCCESS AUC-ROC",
-      subtext: "Big Five psychometric signal",
-      delta: "0.86 AUC",
-      badge: "LOGISTIC"
+      id: "industries-analyzed",
+      targetId: "industry-shift",
+      code: "METRIC / 04",
+      number: "92.8%",
+      label: "SENIOR MODEL BALANCED ACC",
+      subtext: "SDS Personality (Random Forest)",
+      delta: "N=805",
+      badge: "VALIDATED"
     }
   ];
 
@@ -84,7 +67,7 @@ export default function IntelligenceStrip({ onMetricClick }) {
 
               {/* Row 2: Massive Number & Jump icon */}
               <div className="flex items-baseline justify-between">
-                <span className="font-mono font-black text-5xl sm:text-6xl text-[#171717] tracking-tight group-hover:text-[#FF4D2E] transition-colors">
+                <span className="font-mono font-black text-4xl sm:text-5xl text-[#171717] tracking-tight group-hover:text-[#FF4D2E] transition-colors">
                   {item.number}
                 </span>
                 <ArrowUpRight className="w-4 h-4 text-[#66645F] opacity-0 group-hover:opacity-100 group-hover:text-[#FF4D2E] transition-all transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />

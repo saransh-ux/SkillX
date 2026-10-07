@@ -9,11 +9,11 @@ export default function Hero({ onExplore }) {
         {/* Editorial Top Metadata Strip */}
         <div className="flex flex-wrap items-center justify-between border-b border-[#D8D2C4] pb-3 mb-10 text-xs font-mono text-[#66645F] gap-2">
           <div className="flex items-center gap-3">
-            <span className="font-semibold text-[#171717] tracking-wider">LAB DISPATCH // ISSUE 48</span>
+            <span className="font-semibold text-[#171717] tracking-wider">LAB DISPATCH // EMPIRICAL WORKFORCE INTELLIGENCE</span>
             <span className="text-[#D8D2C4]">/</span>
-            <span>SAMPLE: 4.82M GLOBAL POSTINGS</span>
+            <span>SAMPLE: 15,841 ANALYTICS JOBS</span>
             <span className="text-[#D8D2C4] hidden sm:inline">/</span>
-            <span className="hidden sm:inline">METHOD: GRAPH EMBEDDING v3.4</span>
+            <span className="hidden sm:inline">COHORTS: 1,497 PRACTITIONERS (JDS & SDS)</span>
           </div>
           <div className="flex items-center gap-2">
             <span className="inline-block w-1.5 h-1.5 bg-[#FF4D2E]"></span>
@@ -51,22 +51,22 @@ export default function Hero({ onExplore }) {
 
                 {/* Subtitle / Positioning Statement */}
                 <p className="text-lg sm:text-xl text-[#66645F] font-normal leading-relaxed max-w-2xl pt-2">
-                  SKILL//X detects emerging skills, connects them into evolving skill ecosystems, and reveals how work is changing before the shift becomes obvious.
+                  SKILL//X detects verified skills from market postings, builds empirical skill co-occurrence topologies, and evaluates career trajectories using validated machine learning models.
                 </p>
 
                 {/* Technical Signals Micro-bar */}
                 <div className="pt-4 flex flex-wrap items-center gap-y-3 gap-x-6 text-xs font-mono text-[#66645F] border-t border-[#D8D2C4]/60">
                   <div className="flex items-center gap-2">
-                    <span className="text-[#171717] font-semibold">SIGNAL VELOCITY:</span>
-                    <span className="text-[#FF4D2E] font-bold">+37.4% YOY</span>
+                    <span className="text-[#171717] font-semibold">OBSERVATION BASE:</span>
+                    <span className="text-[#FF4D2E] font-bold">15,841 POSTINGS</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-[#171717] font-semibold">PRIMARY CLUSTER:</span>
-                    <span className="px-1.5 py-0.5 bg-[#ECE7DE] text-[#171717] font-medium">COMPOUND AI SYSTEMS</span>
+                    <span className="text-[#171717] font-semibold">PRIMARY DOMAIN:</span>
+                    <span className="px-1.5 py-0.5 bg-[#ECE7DE] text-[#171717] font-medium">ANALYTICS & DATA SCIENCE</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-[#171717] font-semibold">OBSOLESCENCE ACCELERATION:</span>
-                    <span className="text-[#171717]">1.8× BASELINE</span>
+                    <span className="text-[#171717] font-semibold">DATASET SOURCE:</span>
+                    <span className="text-[#171717]">ANALYTICS JOBS CORPUS</span>
                   </div>
                 </div>
 
@@ -80,29 +80,29 @@ export default function Hero({ onExplore }) {
             <div className="space-y-6">
               {/* Header inside indicator block */}
               <div className="flex items-center justify-between border-b border-[#D8D2C4] pb-2 text-xs font-mono">
-                <span className="text-[#66645F]">AGGREGATE METRIC</span>
-                <span className="text-[#FF4D2E] font-semibold">Q3 // 2026</span>
+                <span className="text-[#66645F]">PREVALENCE LEADER</span>
+                <span className="text-[#FF4D2E] font-semibold">PYTHON TELEMETRY</span>
               </div>
 
               {/* Huge Monospaced Metric */}
               <div className="pt-2">
                 <div className="flex items-baseline gap-2">
                   <span className="font-mono font-black text-7xl sm:text-8xl tracking-tight text-[#171717] leading-none">
-                    87
+                    42.3
                   </span>
-                  <span className="text-xl font-mono text-[#66645F]">/ 100</span>
+                  <span className="text-xl font-mono text-[#66645F]">%</span>
                 </div>
                 
                 <div className="mt-2 font-mono text-sm tracking-widest text-[#171717] uppercase font-bold">
-                  EMERGENCE INDEX
+                  PYTHON PREVALENCE
                 </div>
 
                 <div className="mt-2 flex items-center gap-1.5 text-xs font-mono text-[#171717]">
                   <span className="text-[#FF4D2E] font-bold flex items-center">
                     <TrendingUp className="w-3.5 h-3.5 mr-0.5" />
-                    +12.4%
+                    6,698 POSTINGS
                   </span>
-                  <span className="text-[#66645F]">vs previous period</span>
+                  <span className="text-[#66645F]">of 15,841 total</span>
                 </div>
               </div>
 
@@ -110,10 +110,10 @@ export default function Hero({ onExplore }) {
               <div className="bg-[#ECE7DE] border border-[#D8D2C4] p-4 text-xs space-y-2">
                 <div className="font-mono text-[10px] text-[#66645F] tracking-wider uppercase font-semibold flex items-center justify-between">
                   <span>TELEMETRY SUMMARY</span>
-                  <span className="text-[#171717]">99.2% CONF</span>
+                  <span className="text-[#171717]">N=15,841 CORPUS</span>
                 </div>
                 <p className="text-[#171717] leading-relaxed font-sans text-xs">
-                  Market demand shows unprecedented clustering around autonomous execution loops, vector store indexing, and LLM context architecture.
+                  Market demand empirically coalesces around Python, SQL, and Machine Learning. Regional hub concentration peaks in Bengaluru (30.8% of national demand).
                 </p>
               </div>
 

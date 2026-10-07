@@ -1,0 +1,157 @@
+{
+  "model_type": "StandardScaler + LogisticRegression (balanced)",
+  "selected_model_name": "LogisticRegression",
+  "selection_rationale": "LogisticRegression selected as primary model. Balanced Accuracy (0.8578 vs 0.8529), ROC-AUC (0.9755 vs 0.9559), Precision (0.8824 vs 0.7826), and direct signed linear interpretability.",
+  "training_dataset_name": "JDS Skill Traits.xlsx",
+  "target": "salary_hike_high_or_low",
+  "dataset_size": 139,
+  "train_size": 104,
+  "test_size": 35,
+  "class_distribution": {
+    "class_0_low": 66,
+    "class_1_high": 73
+  },
+  "metrics": {
+    "accuracy": 0.8571,
+    "balanced_accuracy": 0.8578,
+    "precision": 0.8824,
+    "recall": 0.8333,
+    "f1": 0.8571,
+    "roc_auc": 0.9755,
+    "confusion_matrix": [
+      [
+        15,
+        2
+      ],
+      [
+        3,
+        15
+      ]
+    ],
+    "confusion_matrix_breakdown": {
+      "true_negatives": 15,
+      "false_positives": 2,
+      "false_negatives": 3,
+      "true_positives": 15
+    },
+    "sample_count": 35,
+    "class_distribution": {
+      "class_0": 17,
+      "class_1": 18
+    }
+  },
+  "comparison_metrics": {
+    "LogisticRegression": {
+      "accuracy": 0.8571,
+      "balanced_accuracy": 0.8578,
+      "precision": 0.8824,
+      "recall": 0.8333,
+      "f1": 0.8571,
+      "roc_auc": 0.9755,
+      "confusion_matrix": [
+        [
+          15,
+          2
+        ],
+        [
+          3,
+          15
+        ]
+      ],
+      "confusion_matrix_breakdown": {
+        "true_negatives": 15,
+        "false_positives": 2,
+        "false_negatives": 3,
+        "true_positives": 15
+      },
+      "sample_count": 35,
+      "class_distribution": {
+        "class_0": 17,
+        "class_1": 18
+      }
+    },
+    "RandomForestClassifier": {
+      "accuracy": 0.8571,
+      "balanced_accuracy": 0.8529,
+      "precision": 0.7826,
+      "recall": 1.0,
+      "f1": 0.878,
+      "roc_auc": 0.9559,
+      "confusion_matrix": [
+        [
+          12,
+          5
+        ],
+        [
+          0,
+          18
+        ]
+      ],
+      "confusion_matrix_breakdown": {
+        "true_negatives": 12,
+        "false_positives": 5,
+        "false_negatives": 0,
+        "true_positives": 18
+      },
+      "sample_count": 35,
+      "class_distribution": {
+        "class_0": 17,
+        "class_1": 18
+      }
+    }
+  },
+  "feature_importance": [
+    {
+      "feature": "maths-stats_skills",
+      "display_name": "Mathematics & Statistics",
+      "coefficient": 1.2187,
+      "odds_ratio": 3.3827,
+      "importance": 1.2187,
+      "rank": 1,
+      "type": "standardized_coefficient"
+    },
+    {
+      "feature": "dashboard_and_storytelling_skills",
+      "display_name": "Dashboard & Storytelling",
+      "coefficient": 0.7983,
+      "odds_ratio": 2.2217,
+      "importance": 0.7983,
+      "rank": 2,
+      "type": "standardized_coefficient"
+    },
+    {
+      "feature": "ai_and_ml_skills",
+      "display_name": "AI & Machine Learning",
+      "coefficient": 0.6935,
+      "odds_ratio": 2.0008,
+      "importance": 0.6935,
+      "rank": 3,
+      "type": "standardized_coefficient"
+    },
+    {
+      "feature": "big_data_skills",
+      "display_name": "Big Data Skills",
+      "coefficient": 0.6504,
+      "odds_ratio": 1.9164,
+      "importance": 0.6504,
+      "rank": 4,
+      "type": "standardized_coefficient"
+    },
+    {
+      "feature": "coding_skills",
+      "display_name": "Coding Skills",
+      "coefficient": 0.4827,
+      "odds_ratio": 1.6204,
+      "importance": 0.4827,
+      "rank": 5,
+      "type": "standardized_coefficient"
+    }
+  ],
+  "training_timestamp": "2026-10-07T09:41:26.567565+00:00",
+  "limitations": [
+    "Observational data only from JDS Skill Traits dataset (sample size: 139 roles).",
+    "Does not establish causality: high skill ratings correlate with higher salary-hike classes but do not guarantee salary growth.",
+    "Binary target (salary_hike_high_or_low) simplifies continuous career compensation dynamics.",
+    "Model should not be used as an automated determinant in personnel or hiring decisions."
+  ]
+}

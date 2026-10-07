@@ -30,7 +30,7 @@ export default function Footer({ onNavigate }) {
             </p>
 
             <p className="text-xs text-[#66645F] font-mono max-w-md leading-relaxed pt-2">
-              SKILL//X continuously ingests and models longitudinal labour market data to anticipate skill shifts, role reorganizations, and cluster emergences.
+              SKILL//X evaluates empirical labour market datasets to map canonical skill taxonomies, co-occurrence topologies, and validated career success patterns.
             </p>
           </div>
 
@@ -45,7 +45,7 @@ export default function Footer({ onNavigate }) {
                   onClick={() => onNavigate && onNavigate('skill-radar')}
                   className="hover:text-[#FF4D2E] transition-colors cursor-pointer text-left"
                 >
-                  01 // MARKET PULSE
+                  01 // SKILL RADAR
                 </button>
               </li>
               <li>
@@ -58,34 +58,26 @@ export default function Footer({ onNavigate }) {
               </li>
               <li>
                 <button
-                  onClick={() => onNavigate && onNavigate('junior-success')}
+                  onClick={() => onNavigate && onNavigate('role-evolution')}
                   className="hover:text-[#FF4D2E] transition-colors cursor-pointer text-left"
                 >
-                  03 // JUNIOR MODEL
+                  03 // ROLE MARKET STRUCTURE
                 </button>
               </li>
               <li>
                 <button
-                  onClick={() => onNavigate && onNavigate('senior-success')}
+                  onClick={() => onNavigate && onNavigate('industry-shift')}
                   className="hover:text-[#FF4D2E] transition-colors cursor-pointer text-left"
                 >
-                  04 // SENIOR MODEL
+                  04 // GEOGRAPHIC MARKET HUBS
                 </button>
               </li>
               <li>
                 <button
-                  onClick={() => onNavigate && onNavigate('career-scan')}
+                  onClick={() => onNavigate && onNavigate('the-signal')}
                   className="hover:text-[#FF4D2E] transition-colors cursor-pointer text-left"
                 >
-                  05 // CAREER SCAN
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => onNavigate && onNavigate('copilot')}
-                  className="hover:text-[#FF4D2E] transition-colors cursor-pointer text-left"
-                >
-                  06 // COPILOT
+                  MODEL EVIDENCE BENCHMARKS
                 </button>
               </li>
               <li>
@@ -93,7 +85,7 @@ export default function Footer({ onNavigate }) {
                   onClick={() => onNavigate && onNavigate('future-scan')}
                   className="hover:text-[#FF4D2E] transition-colors cursor-pointer text-left"
                 >
-                  07 // FUTURE SCAN
+                  05 // CAREER SCAN
                 </button>
               </li>
             </ul>
@@ -102,14 +94,14 @@ export default function Footer({ onNavigate }) {
           {/* Technical Metadata Dossier */}
           <div className="md:col-span-3 space-y-3 font-mono text-xs">
             <div className="text-[10px] font-bold text-[#8E8B83] tracking-widest uppercase mb-2">
-              SYSTEM TELEMETRY
+              GROUNDED DATA TELEMETRY
             </div>
             <div className="space-y-2 text-[#66645F] text-[11px]">
-              <div>DATA CORPUS: <span className="text-[#171717] font-semibold">4.82M JOB POSTINGS</span></div>
-              <div>MODEL ARCH: <span className="text-[#171717] font-semibold">SKILL-GRAPH EMBED-V3.4</span></div>
-              <div>BACKEND INTERFACE: <span className="text-[#171717] font-semibold">FASTAPI / PYTHON ML</span></div>
-              <div>TEMPORAL BASELINE: <span className="text-[#171717] font-semibold">2021 — 2026</span></div>
-              <div>PIPELINE LATENCY: <span className="text-[#171717] font-semibold">14ms GRAPH QUERY</span></div>
+              <div>DATA CORPUS: <span className="text-[#171717] font-semibold">15,841 JOB POSTINGS</span></div>
+              <div>ML BENCHMARKS: <span className="text-[#171717] font-semibold">JDS (N=692) & SDS (N=805)</span></div>
+              <div>CAREER MODEL ACC: <span className="text-[#171717] font-semibold">85.8% BALANCED ACC</span></div>
+              <div>SENIOR MODEL ACC: <span className="text-[#171717] font-semibold">92.8% BALANCED ACC</span></div>
+              <div>GEOGRAPHIC HUBS: <span className="text-[#171717] font-semibold">12 MONITORED METROS</span></div>
             </div>
           </div>
 
@@ -127,7 +119,7 @@ export default function Footer({ onNavigate }) {
 
           <div className="flex items-center gap-2 text-[11px]">
             <span className="w-1.5 h-1.5 bg-[#FF4D2E] inline-block"></span>
-            <span>ENGINE RUNNING IN PROTOTYPE EVALUATION MODE</span>
+            <span>DATASETS: ANALYTICS JOBS • JDS • SDS</span>
           </div>
         </div>
 

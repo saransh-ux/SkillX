@@ -1,0 +1,165 @@
+{
+  "model_type": "RandomForestClassifier (n_estimators=100, max_depth=4, balanced)",
+  "selected_model_name": "RandomForestClassifier",
+  "selection_rationale": "RandomForestClassifier selected as primary model. Balanced Accuracy (0.9282 vs 0.9246), Precision (0.9524 vs 0.913), and ROC-AUC (0.9952 vs 0.9402) on holdout test set.",
+  "training_dataset_name": "SDS Personality Traits.xlsx",
+  "target": "success_classification_high_low",
+  "dataset_size": 161,
+  "train_size": 120,
+  "test_size": 41,
+  "class_distribution": {
+    "class_0_low": 76,
+    "class_1_high": 85
+  },
+  "metrics": {
+    "accuracy": 0.9268,
+    "balanced_accuracy": 0.9282,
+    "precision": 0.9524,
+    "recall": 0.9091,
+    "f1": 0.9302,
+    "roc_auc": 0.9952,
+    "confusion_matrix": [
+      [
+        18,
+        1
+      ],
+      [
+        2,
+        20
+      ]
+    ],
+    "confusion_matrix_breakdown": {
+      "true_negatives": 18,
+      "false_positives": 1,
+      "false_negatives": 2,
+      "true_positives": 20
+    },
+    "sample_count": 41,
+    "class_distribution": {
+      "class_0": 19,
+      "class_1": 22
+    }
+  },
+  "comparison_metrics": {
+    "LogisticRegression": {
+      "accuracy": 0.9268,
+      "balanced_accuracy": 0.9246,
+      "precision": 0.913,
+      "recall": 0.9545,
+      "f1": 0.9333,
+      "roc_auc": 0.9402,
+      "confusion_matrix": [
+        [
+          17,
+          2
+        ],
+        [
+          1,
+          21
+        ]
+      ],
+      "confusion_matrix_breakdown": {
+        "true_negatives": 17,
+        "false_positives": 2,
+        "false_negatives": 1,
+        "true_positives": 21
+      },
+      "sample_count": 41,
+      "class_distribution": {
+        "class_0": 19,
+        "class_1": 22
+      }
+    },
+    "RandomForestClassifier": {
+      "accuracy": 0.9268,
+      "balanced_accuracy": 0.9282,
+      "precision": 0.9524,
+      "recall": 0.9091,
+      "f1": 0.9302,
+      "roc_auc": 0.9952,
+      "confusion_matrix": [
+        [
+          18,
+          1
+        ],
+        [
+          2,
+          20
+        ]
+      ],
+      "confusion_matrix_breakdown": {
+        "true_negatives": 18,
+        "false_positives": 1,
+        "false_negatives": 2,
+        "true_positives": 20
+      },
+      "sample_count": 41,
+      "class_distribution": {
+        "class_0": 19,
+        "class_1": 22
+      }
+    }
+  },
+  "feature_importance": [
+    {
+      "feature": "conscientiousness",
+      "display_name": "Conscientiousness",
+      "importance": 0.3824,
+      "coefficient": null,
+      "rank": 1,
+      "type": "gini_importance"
+    },
+    {
+      "feature": "openness_to_experience",
+      "display_name": "Openness to Experience",
+      "importance": 0.311,
+      "coefficient": null,
+      "rank": 2,
+      "type": "gini_importance"
+    },
+    {
+      "feature": "extraversion",
+      "display_name": "Extraversion",
+      "importance": 0.1678,
+      "coefficient": null,
+      "rank": 3,
+      "type": "gini_importance"
+    },
+    {
+      "feature": "agreeableness",
+      "display_name": "Agreeableness",
+      "importance": 0.1098,
+      "coefficient": null,
+      "rank": 4,
+      "type": "gini_importance"
+    },
+    {
+      "feature": "neuroticism",
+      "display_name": "Neuroticism",
+      "importance": 0.0291,
+      "coefficient": null,
+      "rank": 5,
+      "type": "gini_importance"
+    }
+  ],
+  "training_timestamp": "2026-10-07T09:41:26.761085+00:00",
+  "limitations": [
+    "Observational study on a specific cohort of data scientists (n=161).",
+    "Does NOT establish that personality traits cause professional success.",
+    "Personality inventories vary across instruments and cultural contexts.",
+    "This model must not be interpreted as a universal rule about data scientists or used for hiring/promotions."
+  ],
+  "dataset_information": {
+    "source": "SDS Personality Traits.xlsx",
+    "features": [
+      "neuroticism",
+      "extraversion",
+      "openness_to_experience",
+      "agreeableness",
+      "conscientiousness"
+    ],
+    "target": "success_classification_high_low",
+    "positive_label": "High success classification (1)",
+    "negative_label": "Low success classification (0)"
+  }
+}
