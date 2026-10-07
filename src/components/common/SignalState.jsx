@@ -1,4 +1,7 @@
 import React from 'react';
+import BackendConnectionError from './BackendConnectionError';
+
+export { BackendConnectionError };
 
 /**
  * Editorial Loading State for Signal Telemetry
@@ -20,27 +23,19 @@ export function SignalLoading({ message = "ANALYZING WORKFORCE SIGNAL..." }) {
 /**
  * Editorial Error State for Signal Telemetry
  */
-export function SignalError({ message = "WORKFORCE SIGNAL UNAVAILABLE", onRetry }) {
+export function SignalError({
+  message = "WORKFORCE SIGNAL UNAVAILABLE",
+  endpoint = '',
+  status = null,
+  onRetry
+}) {
   return (
-    <div className="border border-[#D8D2C4] bg-[#ECE7DE]/30 p-8 my-6 text-center">
-      <div className="inline-flex items-center gap-2 font-mono text-xs text-[#FF4D2E]">
-        <span className="w-2 h-2 bg-[#FF4D2E]"></span>
-        <span className="font-bold tracking-widest uppercase">{message}</span>
-      </div>
-      <div className="text-[10px] font-mono text-[#66645F] mt-1.5 uppercase tracking-wider">
-        BACKEND DISCONNECTED // USING LOCAL INTELLIGENCE CORPUS
-      </div>
-      {onRetry && (
-        <div className="mt-3">
-          <button
-            onClick={onRetry}
-            className="px-3 py-1 bg-[#171717] hover:bg-[#FF4D2E] text-[#F4F1EA] text-[10px] font-mono uppercase tracking-wider transition-colors cursor-pointer"
-          >
-            RETRY SIGNAL ACQUISITION
-          </button>
-        </div>
-      )}
-    </div>
+    <BackendConnectionError
+      endpoint={endpoint}
+      status={status}
+      message={message}
+      onRetry={onRetry}
+    />
   );
 }
 

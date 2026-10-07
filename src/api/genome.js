@@ -1,63 +1,99 @@
 /**
  * GENOME API MODULE
- * Retrieves topological skill graph networks and co-occurrence clusters.
+ * Strictly aligned with FastAPI backend endpoint:
+ * - GET /api/skill-genome (alias: /api/skills/genome)
+ *
+ * Honors VITE_DEMO_MODE:
+ * When VITE_DEMO_MODE=true, falls back to local mock data.
+ * When VITE_DEMO_MODE=false, throws real backend errors.
  */
 
-import { apiClient } from './client.js';
+import { apiClient, IS_DEMO_MODE } from './client.js';
 import { genomeNetwork } from '../data/mock/mockSkills.js';
-import { getSkillRelationships } from './skills.js';
-
-export { getSkillRelationships };
 
 /**
  * Normalizes graph network nodes and links ensuring required coordinate
  * and topological fields are present.
  */
 export function normalizeGenomeNetwork(raw) {
-  if (!raw || !Array.isArray(raw.nodes) || !Array.isArray(raw.links)) {
-    return genomeNetwork;
-  }
+  if (!raw) return { nodes: [], edges: [], links: [] };
 
-  // Preserve existing node positions or default positions if backend omits x/y
-  const defaultMap = new Map(genomeNetwork.nodes.map(n => [n.id, n]));
+  const rawNodes = raw.nodes || [];
+  const rawEdges = raw.edges || raw.links || [];
 
-  const nodes = raw.nodes.map((node, idx) => {
-    const fallback = defaultMap.get(node.id) || {};
+  const defaultMap = new Map((genomeNetwork?.nodes || []).map(n => [n.id, n]));
+
+  const nodes = rawNodes.map((node, idx) => {
+    const id = node.id || node.skill_id || `node-${idx}`;
+    const label = node.label || node.display_name || node.canonical_name || node.name || id;
+    const count = node.count ?? node.posting_count ?? 0;
+
     return {
-      id: node.id || `node-${idx}`,
-      label: node.label || node.name || node.id || 'SKILL',
-      type: node.type || fallback.type || 'frontier',
-      cluster: node.cluster || fallback.cluster || 'ai',
-      x: typeof node.x === 'number' ? node.x : fallback.x || (150 + (idx % 4) * 120),
-      y: typeof node.y === 'number' ? node.y : fallback.y || (120 + Math.floor(idx / 4) * 80),
-      r: typeof node.r === 'number' ? node.r : fallback.r || 7,
-      score: typeof node.score === 'number' ? node.score : fallback.score || 80,
-      featured: node.featured ?? fallback.featured ?? false
+      id,
+      skill_id: id,
+      label,
+      name: label,
+      count,
+      posting_count: count,
+      degree: node.degree ?? (rawEdges.filter(e => e.source === id || e.target === id).length),
+      type: node.type || 'empirical',
+      cluster: node.cluster || 'data-science'
     };
   });
 
-  const links = raw.links.map(link => ({
-    source: typeof link.source === 'object' ? link.source.id : link.source,
-    target: typeof link.target === 'object' ? link.target.id : link.target,
-    weight: typeof link.weight === 'number' ? link.weight : 0.75,
-    emergent: link.emergent ?? (link.weight > 0.8),
-    highlight: link.highlight ?? (link.weight > 0.85)
-  }));
+  const edges = rawEdges.map(edge => {
+    const source = typeof edge.source === 'object' ? edge.source.id : edge.source;
+    const target = typeof edge.target === 'object' ? edge.target.id : edge.target;
+    const cooccurrence = edge.cooccurrence ?? edge.co_occurrence_count ?? 0;
+    const association = typeof edge.association === 'number'
+      ? edge.association
+      : (typeof edge.weight === 'number' ? edge.weight : (edge.jaccard_similarity ?? 0));
 
-  return { nodes, links };
+    return {
+      source,
+      target,
+      cooccurrence,
+      co_occurrence_count: cooccurrence,
+      association,
+      weight: association,
+      jaccard_similarity: association
+    };
+  });
+
+  return {
+    nodes,
+    edges,
+    links: edges, // Alias for backward compatibility
+    metadata: raw.metadata || null
+  };
 }
 
 /**
- * GET /api/skills/genome or /api/skills/relationships
- * Retrieves the full topological graph network.
- * Falls back to local genomeNetwork mock.
+ * GET /api/skill-genome
+ * Retrieves topological skill graph networks and co-occurrence clusters.
  */
-export async function getGenomeNetwork() {
+export async function getSkillGenome(params = {}) {
+  const query = new URLSearchParams();
+  if (params.focal_skill) query.set('focal_skill', params.focal_skill);
+  if (params.min_support !== undefined) query.set('min_support', String(params.min_support));
+  if (params.limit_nodes !== undefined) query.set('limit_nodes', String(params.limit_nodes));
+  if (params.limit_edges !== undefined) query.set('limit_edges', String(params.limit_edges));
+
+  const qs = query.toString() ? `?${query.toString()}` : '';
+
   try {
-    const data = await apiClient.get('/api/skills/genome');
+    const data = await apiClient.get(`/api/skill-genome${qs}`);
     return normalizeGenomeNetwork(data);
   } catch (error) {
-    console.warn('[SKILL//X API] /api/skills/genome unavailable, falling back to mock graph:', error.message);
-    return normalizeGenomeNetwork(genomeNetwork);
+    if (IS_DEMO_MODE) {
+      console.warn('[SKILL//X DEMO MODE] /api/skill-genome fallback to mock graph:', error.message);
+      return normalizeGenomeNetwork(genomeNetwork);
+    }
+    throw error;
   }
 }
+
+/**
+ * Backward compatibility alias for getSkillGenome
+ */
+export const getGenomeNetwork = getSkillGenome;

@@ -3,7 +3,7 @@
  * Integrates predictive workforce projection queries with backend ML models.
  */
 
-import { apiClient } from './client.js';
+import { apiClient, IS_DEMO_MODE } from './client.js';
 
 /**
  * Normalizes backend prediction response or fallback projection
@@ -203,8 +203,11 @@ export async function runFutureScan(payload) {
     const data = await apiClient.post('/api/future-scan', payload);
     return normalizeFutureScanResponse(data, payload);
   } catch (error) {
-    console.warn('[SKILL//X API] /api/future-scan unavailable, falling back to local simulation:', error.message);
-    const mockData = getMockProjection(payload);
-    return normalizeFutureScanResponse(mockData, payload);
+    if (IS_DEMO_MODE) {
+      console.warn('[SKILL//X DEMO MODE] /api/future-scan fallback to local simulation:', error.message);
+      const mockData = getMockProjection(payload);
+      return normalizeFutureScanResponse(mockData, payload);
+    }
+    throw error;
   }
 }

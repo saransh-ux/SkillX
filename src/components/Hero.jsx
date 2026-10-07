@@ -88,7 +88,7 @@ export default function Hero({ onExplore }) {
               <div className="pt-2">
                 <div className="flex items-baseline gap-2">
                   <span className="font-mono font-black text-7xl sm:text-8xl tracking-tight text-[#171717] leading-none">
-                    42.3
+                    5.9
                   </span>
                   <span className="text-xl font-mono text-[#66645F]">%</span>
                 </div>
@@ -100,7 +100,7 @@ export default function Hero({ onExplore }) {
                 <div className="mt-2 flex items-center gap-1.5 text-xs font-mono text-[#171717]">
                   <span className="text-[#FF4D2E] font-bold flex items-center">
                     <TrendingUp className="w-3.5 h-3.5 mr-0.5" />
-                    6,698 POSTINGS
+                    939 POSTINGS
                   </span>
                   <span className="text-[#66645F]">of 15,841 total</span>
                 </div>
@@ -113,7 +113,7 @@ export default function Hero({ onExplore }) {
                   <span className="text-[#171717]">N=15,841 CORPUS</span>
                 </div>
                 <p className="text-[#171717] leading-relaxed font-sans text-xs">
-                  Market demand empirically coalesces around Python, SQL, and Machine Learning. Regional hub concentration peaks in Bengaluru (30.8% of national demand).
+                  Market demand empirically coalesces around Analytics, SQL, and Python. Regional hub concentration peaks in Bengaluru (27.97% of national demand, 4,430 postings).
                 </p>
               </div>
 

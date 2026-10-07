@@ -1,43 +1,71 @@
 /**
  * COPILOT API MODULE
- * Implements natural-language conversational analytics queries:
- * POST /api/copilot/query
- * Grounded in official hackathon datasets and model feature signals.
+ * Strictly aligned with FastAPI backend endpoint:
+ * - POST /api/copilot
+ *
+ * Request schema:
+ * {
+ *   "question": "...",
+ *   "context": {
+ *     "role": "...",
+ *     "location": "..."
+ *   }
+ * }
+ *
+ * Honors VITE_DEMO_MODE:
+ * When VITE_DEMO_MODE=true, falls back to local knowledge base.
+ * When VITE_DEMO_MODE=false, throws real backend errors.
  */
 
-import { apiClient } from './client.js';
+import { apiClient, IS_DEMO_MODE } from './client.js';
 import { simulateCopilotQuery, SUGGESTED_COPILOT_PROMPTS } from '../data/mock/mockCopilot.js';
 
 export { SUGGESTED_COPILOT_PROMPTS };
 
 /**
- * POST /api/copilot/query
- * Evaluates a user natural language question against workforce intelligence corpus.
+ * POST /api/copilot
+ * Evaluates a user question against the empirical hackathon datasets.
  */
 export async function queryCopilot(query, context = {}) {
-  if (!query || typeof query !== 'string' || !query.trim()) {
-    throw new Error('Query string is required for Copilot telemetry.');
+  const questionText = typeof query === 'string' ? query.trim() : (query?.question || query?.query || '').trim();
+  if (!questionText) {
+    throw new Error('Question string is required for Copilot telemetry.');
+  }
+
+  // Format context strictly as CopilotContext { role, location }
+  let contextPayload = null;
+  if (context && typeof context === 'object' && Object.keys(context).length > 0) {
+    contextPayload = {
+      role: context.role || context.target_role || context.targetRole || null,
+      location: context.location || null
+    };
   }
 
   const payload = {
-    query: query.trim(),
-    context
+    question: questionText,
+    context: contextPayload
   };
 
   try {
-    const data = await apiClient.post('/api/copilot/query', payload);
-    if (data && typeof data === 'object') {
-      return {
-        query: payload.query,
-        answer: data.answer || data.response || 'Telemetry response received without message body.',
-        citations: Array.isArray(data.citations) ? data.citations : ['EMPIRICAL_CORPUS'],
-        relatedMetrics: Array.isArray(data.relatedMetrics) ? data.relatedMetrics : [],
-        timestamp: data.timestamp || new Date().toISOString()
-      };
-    }
-    return simulateCopilotQuery(payload.query);
+    const data = await apiClient.post('/api/copilot', payload);
+    return {
+      query: questionText,
+      answer: data.answer || 'Telemetry response received without message body.',
+      methodology: data.methodology || 'Empirical analysis',
+      evidence: data.evidence || [],
+      caveats: data.caveats || [],
+      timestamp: new Date().toISOString()
+    };
   } catch (error) {
-    console.warn('[SKILL//X API] /api/copilot/query unavailable, falling back to empirical knowledge base:', error.message);
-    return simulateCopilotQuery(payload.query);
+    if (IS_DEMO_MODE) {
+      console.warn('[SKILL//X DEMO MODE] /api/copilot fallback to mock knowledge base:', error.message);
+      return simulateCopilotQuery(questionText);
+    }
+    throw error;
   }
 }
+
+/**
+ * Backward-compatible alias matching services/api.js
+ */
+export const askCopilot = queryCopilot;

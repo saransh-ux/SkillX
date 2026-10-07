@@ -4,10 +4,10 @@ import Hero from '../components/Hero';
 import IntelligenceStrip from '../components/IntelligenceStrip';
 import SkillRadar from '../components/SkillRadar';
 import SkillGenome from '../components/SkillGenome';
-import RoleEvolution from '../components/RoleEvolution';
-import IndustryShift from '../components/IndustryShift';
-import SignalInsight from '../components/SignalInsight';
-import FutureScan from '../components/FutureScan';
+import JuniorSuccess from '../components/JuniorSuccess';
+import SeniorSuccess from '../components/SeniorSuccess';
+import CareerScan from '../components/CareerScan';
+import Copilot from '../components/Copilot';
 import Footer from '../components/Footer';
 
 export default function Dashboard() {
@@ -27,10 +27,10 @@ export default function Dashboard() {
         'overview',
         'skill-radar',
         'skill-genome',
-        'role-evolution',
-        'industry-shift',
-        'the-signal',
-        'future-scan'
+        'career-success',
+        'senior-success',
+        'career-scan',
+        'copilot'
       ];
       const scrollPosition = window.scrollY + 200;
 
@@ -60,23 +60,23 @@ export default function Dashboard() {
         {/* Continuous Horizontal Intelligence Strip */}
         <IntelligenceStrip onMetricClick={scrollToSection} />
 
-        {/* 01 / Skill Radar */}
+        {/* 01 / Market Pulse */}
         <SkillRadar />
 
         {/* 02 / Skill Genome */}
         <SkillGenome />
 
-        {/* 03 / Role Evolution */}
-        <RoleEvolution />
+        {/* 03 / Career Success */}
+        <JuniorSuccess />
 
-        {/* 04 / Industry Shift */}
-        <IndustryShift />
+        {/* 04 / Senior Success */}
+        <SeniorSuccess />
 
-        {/* Featured Research Finding: THE SIGNAL */}
-        <SignalInsight />
+        {/* 05 / Career Scan */}
+        <CareerScan />
 
-        {/* 05 / Future Scan CTA */}
-        <FutureScan />
+        {/* 06 / Copilot */}
+        <Copilot />
       </main>
 
       {/* Minimal Footer */}

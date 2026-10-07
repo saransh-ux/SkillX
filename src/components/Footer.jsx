@@ -45,7 +45,7 @@ export default function Footer({ onNavigate }) {
                   onClick={() => onNavigate && onNavigate('skill-radar')}
                   className="hover:text-[#FF4D2E] transition-colors cursor-pointer text-left"
                 >
-                  01 // SKILL RADAR
+                  01 // MARKET PULSE
                 </button>
               </li>
               <li>
@@ -58,34 +58,34 @@ export default function Footer({ onNavigate }) {
               </li>
               <li>
                 <button
-                  onClick={() => onNavigate && onNavigate('role-evolution')}
+                  onClick={() => onNavigate && onNavigate('career-success')}
                   className="hover:text-[#FF4D2E] transition-colors cursor-pointer text-left"
                 >
-                  03 // ROLE MARKET STRUCTURE
+                  03 // CAREER SUCCESS
                 </button>
               </li>
               <li>
                 <button
-                  onClick={() => onNavigate && onNavigate('industry-shift')}
+                  onClick={() => onNavigate && onNavigate('senior-success')}
                   className="hover:text-[#FF4D2E] transition-colors cursor-pointer text-left"
                 >
-                  04 // GEOGRAPHIC MARKET HUBS
+                  04 // SENIOR SUCCESS
                 </button>
               </li>
               <li>
                 <button
-                  onClick={() => onNavigate && onNavigate('the-signal')}
-                  className="hover:text-[#FF4D2E] transition-colors cursor-pointer text-left"
-                >
-                  MODEL EVIDENCE BENCHMARKS
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => onNavigate && onNavigate('future-scan')}
+                  onClick={() => onNavigate && onNavigate('career-scan')}
                   className="hover:text-[#FF4D2E] transition-colors cursor-pointer text-left"
                 >
                   05 // CAREER SCAN
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => onNavigate && onNavigate('copilot')}
+                  className="hover:text-[#FF4D2E] transition-colors cursor-pointer text-left"
+                >
+                  06 // COPILOT
                 </button>
               </li>
             </ul>

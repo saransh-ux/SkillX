@@ -2,20 +2,36 @@
  * SKILL//X API CLIENT
  * Centralized fetch wrapper for communicating with the FastAPI + ML backend.
  * Reads base URL from VITE_API_BASE_URL (defaults to empty string for relative or unconfigured).
+ *
+ * Honors VITE_DEMO_MODE:
+ * When VITE_DEMO_MODE=true, fallback to mock data is allowed.
+ * When VITE_DEMO_MODE=false (default), real backend errors (404, 422, 500, network) are thrown explicitly.
  */
 
-const RAW_BASE_URL =
-  (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE_URL) || '';
+const getEnv = (key, fallback = '') => {
+  if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[key] !== undefined) {
+    return import.meta.env[key];
+  }
+  if (typeof process !== 'undefined' && process.env && process.env[key] !== undefined) {
+    return process.env[key];
+  }
+  return fallback;
+};
+
+const RAW_BASE_URL = getEnv('VITE_API_BASE_URL', '');
 // Strip trailing slash if present
 export const API_BASE_URL = RAW_BASE_URL.replace(/\/+$/, '');
 
+export const IS_DEMO_MODE = String(getEnv('VITE_DEMO_MODE', 'false')).toLowerCase() === 'true';
+
 export class ApiError extends Error {
-  constructor(message, status = 500, data = null, isNetworkError = false) {
+  constructor(message, status = 500, data = null, isNetworkError = false, endpoint = '') {
     super(message);
     this.name = 'ApiError';
     this.status = status;
     this.data = data;
     this.isNetworkError = isNetworkError;
+    this.endpoint = endpoint;
   }
 }
 
@@ -24,7 +40,7 @@ export class ApiError extends Error {
  */
 export async function request(endpoint, options = {}) {
   const {
-    timeout = 4000,
+    timeout = 8000,
     headers = {},
     body,
     ...customConfig
@@ -65,10 +81,17 @@ export async function request(endpoint, options = {}) {
     }
 
     if (!response.ok) {
-      const errorMessage =
-        (responseData && typeof responseData === 'object' && (responseData.detail || responseData.message)) ||
-        `HTTP Error ${response.status}: ${response.statusText}`;
-      throw new ApiError(errorMessage, response.status, responseData);
+      let errorMessage = `HTTP Error ${response.status}: ${response.statusText}`;
+      if (responseData && typeof responseData === 'object') {
+        if (typeof responseData.detail === 'string') {
+          errorMessage = responseData.detail;
+        } else if (Array.isArray(responseData.detail)) {
+          errorMessage = responseData.detail.map(d => `${d.loc?.join('.') || 'field'}: ${d.msg}`).join(', ');
+        } else if (responseData.message) {
+          errorMessage = responseData.message;
+        }
+      }
+      throw new ApiError(errorMessage, response.status, responseData, false, path);
     }
 
     return responseData;
@@ -76,11 +99,12 @@ export async function request(endpoint, options = {}) {
     clearTimeout(timer);
 
     if (error instanceof ApiError) {
+      if (!error.endpoint) error.endpoint = path;
       throw error;
     }
 
     if (error.name === 'AbortError') {
-      throw new ApiError('Request timed out while waiting for backend telemetry.', 408, null, true);
+      throw new ApiError('Request timed out while waiting for backend telemetry.', 408, null, true, path);
     }
 
     // Network disconnection, CORS failure, connection refused
@@ -88,7 +112,8 @@ export async function request(endpoint, options = {}) {
       error.message || 'Network connection failed to reach workforce API.',
       0,
       null,
-      true
+      true,
+      path
     );
   }
 }

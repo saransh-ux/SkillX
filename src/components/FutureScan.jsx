@@ -253,14 +253,20 @@ export default function FutureScan() {
             
             {/* Header Strip */}
             <div className="p-6 bg-[#171717] text-[#F4F1EA] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs font-mono">
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-2">
                 <span className="px-2 py-0.5 bg-[#FF4D2E] text-white font-bold">
                   CAREER SCAN SYNTHESIS
                 </span>
-                <span>TARGET: {targetRole} ({location})</span>
+                <span className="px-2 py-0.5 border border-[#444] text-[#F4F1EA] uppercase text-[10px] font-bold">
+                  BACKEND-DERIVED SIGNAL
+                </span>
+                <span className="px-2 py-0.5 border border-[#444] text-[#D8D2C4] uppercase text-[10px]">
+                  EMPIRICAL DATASET
+                </span>
+                <span className="ml-2">TARGET: {targetRole} ({location})</span>
               </div>
               <div className="text-[#8E8B83]">
-                GROUNDED IN THREE EMPIRICAL CORPUSES
+                GROUNDED IN THREE EMPIRICAL CORPUSES (15,841 POSTINGS // JDS n=139 // SDS n=161)
               </div>
             </div>
 

@@ -1,21 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { getSkillGenome } from '../services/api';
-import { Network, RefreshCw, AlertCircle, Sparkles, Filter } from 'lucide-react';
+import { getSkillGenome } from '../api/genome';
+import { getSkillDetail } from '../api/skills';
+import BackendConnectionError from './common/BackendConnectionError';
+import { RefreshCw, Search, Layers, Compass } from 'lucide-react';
 
 export default function SkillGenome() {
-  const [focalSkill, setFocalSkill] = useState('');
+  const [focalSkill, setFocalSkill] = useState('Python');
+  const [searchInput, setSearchInput] = useState('');
   const [genomeData, setGenomeData] = useState({ nodes: [], edges: [], metadata: null });
   const [activeNodeId, setActiveNodeId] = useState(null);
+  const [activeSkillDetail, setActiveSkillDetail] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const focalPresets = [
-    { label: 'ALL SKILLS', value: '' },
-    { label: 'Python', value: 'Python' },
+    { label: 'Python (Focal)', value: 'Python' },
     { label: 'SQL', value: 'SQL' },
     { label: 'Machine Learning', value: 'Machine Learning' },
-    { label: 'Tableau', value: 'Tableau' },
     { label: 'R', value: 'R' },
+    { label: 'Analytics', value: 'Analytics' },
+    { label: 'ALL SKILLS', value: '' },
   ];
 
   const fetchGenome = async (focal) => {
@@ -25,17 +29,25 @@ export default function SkillGenome() {
       const resp = await getSkillGenome({
         focal_skill: focal || undefined,
         limit_nodes: 24,
-        limit_edges: 40,
-        min_support: 5,
+        limit_edges: 36,
+        min_support: focal ? 5 : 10,
       });
       setGenomeData(resp);
       if (resp.nodes && resp.nodes.length > 0) {
-        setActiveNodeId(resp.nodes[0].id);
+        // Set active node to focal skill if available, else first node
+        const focalNode = resp.nodes.find(
+          n => n.label.toLowerCase() === (focal || '').toLowerCase() || n.id.toLowerCase() === (focal || '').toLowerCase()
+        );
+        setActiveNodeId(focalNode ? focalNode.id : resp.nodes[0].id);
       } else {
         setActiveNodeId(null);
       }
     } catch (err) {
-      setError(err.message || 'Failed to load Skill Genome network');
+      setError({
+        message: err.message || 'Failed to load Skill Genome network from /api/skill-genome',
+        status: err.status ?? (err.isNetworkError ? 0 : 500),
+        endpoint: err.endpoint || '/api/skill-genome'
+      });
       setGenomeData({ nodes: [], edges: [], metadata: null });
     } finally {
       setLoading(false);
@@ -45,6 +57,26 @@ export default function SkillGenome() {
   useEffect(() => {
     fetchGenome(focalSkill);
   }, [focalSkill]);
+
+  // When active node changes, load full relationship profile via GET /api/skills/{skill_name}
+  useEffect(() => {
+    if (!activeNodeId) {
+      setActiveSkillDetail(null);
+      return;
+    }
+    let isMounted = true;
+    const loadDetail = async () => {
+      setDetailLoading(true);
+      try {
+        const detail = await getSkillDetail(activeNodeId);
+        if (isMounted) setActiveSkillDetail(detail);
+      } catch {
+        if (isMounted) setActiveSkillDetail(null);
+      }
+    };
+    loadDetail();
+    return () => { isMounted = false; };
+  }, [activeNodeId]);
 
   const { nodes, edges, metadata } = genomeData;
   const activeNode = nodes.find(n => n.id === activeNodeId) || nodes[0];
@@ -93,24 +125,41 @@ export default function SkillGenome() {
         <div className="flex flex-col md:flex-row md:items-end justify-between border-b border-[#D8D2C4] pb-6 mb-10 gap-4">
           <div>
             <div className="font-mono text-xs text-[#FF4D2E] font-semibold tracking-editorial uppercase mb-2">
-              02 / SKILL GENOME
+              02 / SKILL GENOME — CO-OCCURRENCE TOPOLOGY
             </div>
             <h2 className="font-sans font-black text-3xl sm:text-4xl lg:text-5xl tracking-tight text-[#171717] uppercase">
-              SKILL GENOME NETWORK
+              SKILL GENOME
             </h2>
             <p className="text-[#66645F] text-base mt-2 font-normal max-w-xl">
-              Empirical co-occurrence topology computed directly from Analytics Jobs.key_skills. Normalized via Jaccard similarity.
+              Empirical co-occurrence topology computed directly from Analytics Jobs.key_skills. Normalized via Jaccard association metrics.
             </p>
           </div>
 
-          {/* Focal Skill Selector Toggles */}
-          <div className="flex flex-wrap items-center gap-1 font-mono text-xs">
-            <span className="text-[#66645F] uppercase mr-2 hidden sm:inline">FOCAL SKILL:</span>
+          <div className="flex flex-wrap items-center gap-2 font-mono text-xs">
+            <span className="px-2.5 py-1 bg-[#171717] text-[#F4F1EA] uppercase font-bold tracking-wider">
+              EMPIRICAL DATASET
+            </span>
+            <span className="px-2.5 py-1 border border-[#D8D2C4] text-[#171717] uppercase">
+              SAMPLE: {metadata ? metadata.sample_size.toLocaleString() : '15,841'} POSTINGS
+            </span>
+          </div>
+        </div>
+
+        {/* Focal Skill Selector Bar */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-4 mb-8 border-b border-[#D8D2C4]/60 font-mono text-xs">
+          {/* Preset Buttons */}
+          <div className="flex items-center gap-1 overflow-x-auto scrollbar-none">
+            <span className="text-[#66645F] uppercase mr-2 flex items-center gap-1">
+              <Layers className="w-3.5 h-3.5" /> FOCAL SKILL:
+            </span>
             {focalPresets.map(preset => (
               <button
                 key={preset.label}
-                onClick={() => setFocalSkill(preset.value)}
-                className={`px-3 py-1 border transition-colors cursor-pointer ${
+                onClick={() => {
+                  setFocalSkill(preset.value);
+                  setSearchInput(preset.value);
+                }}
+                className={`px-3 py-1 border transition-colors cursor-pointer whitespace-nowrap ${
                   focalSkill === preset.value
                     ? 'bg-[#171717] text-[#F4F1EA] border-[#171717] font-semibold'
                     : 'bg-transparent text-[#66645F] border-[#D8D2C4] hover:text-[#171717] hover:bg-[#ECE7DE]'
@@ -120,22 +169,44 @@ export default function SkillGenome() {
               </button>
             ))}
           </div>
+
+          {/* Custom Skill Search Form */}
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (searchInput.trim()) {
+                setFocalSkill(searchInput.trim());
+              }
+            }}
+            className="flex items-center gap-2"
+          >
+            <div className="relative flex-1 sm:w-64">
+              <input
+                type="text"
+                placeholder="Custom focal skill (e.g. Python, SQL)..."
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                className="w-full bg-[#ECE7DE]/50 border border-[#D8D2C4] px-3 py-1 text-xs text-[#171717] focus:outline-none focus:border-[#171717]"
+              />
+            </div>
+            <button
+              type="submit"
+              className="px-3 py-1 bg-[#171717] text-[#F4F1EA] hover:bg-[#FF4D2E] transition-colors cursor-pointer flex items-center gap-1"
+            >
+              <Search className="w-3 h-3" />
+              <span>EXPLORE</span>
+            </button>
+          </form>
         </div>
 
         {/* Error Notification */}
         {error && (
-          <div className="border border-[#FF4D2E] bg-[#FF4D2E]/10 p-4 mb-8 text-xs font-mono flex items-center justify-between text-[#171717]">
-            <div className="flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 text-[#FF4D2E]" />
-              <span>Network Error: {error}</span>
-            </div>
-            <button
-              onClick={() => fetchGenome(focalSkill)}
-              className="underline hover:text-[#FF4D2E] cursor-pointer"
-            >
-              RETRY
-            </button>
-          </div>
+          <BackendConnectionError
+            endpoint={typeof error === 'object' ? error.endpoint : '/api/skill-genome'}
+            status={typeof error === 'object' ? error.status : null}
+            message={typeof error === 'object' ? error.message : error}
+            onRetry={() => fetchGenome(focalSkill)}
+          />
         )}
 
         {/* Network Graph Container */}
@@ -188,9 +259,9 @@ export default function SkillGenome() {
                       y1={p1.y}
                       x2={p2.x}
                       y2={p2.y}
-                      stroke={isConnected ? '#FF4D2E' : '#D8D2C4'}
+                      stroke={isConnected ? '#FF4D2E' : 'var(--border-line, #D8D2C4)'}
                       strokeWidth={isConnected ? strokeWidth + 1 : strokeWidth}
-                      strokeOpacity={isConnected ? 0.9 : 0.4}
+                      strokeOpacity={isConnected ? 0.9 : 0.5}
                       className="transition-colors duration-200"
                     />
                   );
@@ -226,8 +297,8 @@ export default function SkillGenome() {
                         cx={node.x}
                         cy={node.y}
                         r={radius}
-                        fill={isActive ? '#FF4D2E' : isNeighbor ? '#171717' : '#8E8B83'}
-                        stroke="#F4F1EA"
+                        fill={isActive ? '#FF4D2E' : isNeighbor ? 'var(--text-ink, #171717)' : 'var(--text-muted, #8E8B83)'}
+                        stroke="var(--bg-paper, #F4F1EA)"
                         strokeWidth="2"
                         className="transition-transform duration-150 group-hover:scale-125"
                       />
@@ -237,7 +308,7 @@ export default function SkillGenome() {
                         x={node.x}
                         y={node.y + radius + 11}
                         textAnchor="middle"
-                        fill={isActive ? '#FF4D2E' : '#171717'}
+                        fill={isActive ? '#FF4D2E' : 'var(--text-ink, #171717)'}
                         fontSize="10"
                         fontWeight={isActive ? '700' : '500'}
                         fontFamily="JetBrains Mono"
@@ -257,15 +328,30 @@ export default function SkillGenome() {
             {activeNode ? (
               <div className="border border-[#D8D2C4] bg-[#F4F1EA] p-6 space-y-5">
                 <div>
-                  <div className="text-[10px] font-mono text-[#66645F] uppercase tracking-wider mb-1">
-                    SELECTED NODE // {activeNode.id}
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[10px] font-mono text-[#66645F] uppercase tracking-wider">
+                      SELECTED NODE // {activeNode.id}
+                    </span>
+                    <button
+                      onClick={() => {
+                        setFocalSkill(activeNode.label);
+                        setSearchInput(activeNode.label);
+                      }}
+                      className="px-2 py-0.5 bg-[#171717] hover:bg-[#FF4D2E] text-white text-[10px] font-mono uppercase tracking-wider transition-colors cursor-pointer flex items-center gap-1"
+                      title="Center the genome network around this skill"
+                    >
+                      <Compass className="w-3 h-3" />
+                      <span>SET AS FOCAL</span>
+                    </button>
                   </div>
                   <h3 className="font-sans font-bold text-2xl text-[#171717]">
                     {activeNode.label}
                   </h3>
                   <div className="mt-2 text-xs font-mono text-[#66645F] flex items-center justify-between">
                     <span>POSTINGS VOL:</span>
-                    <strong className="text-[#171717]">{activeNode.count?.toLocaleString() || 'N/A'}</strong>
+                    <strong className="text-[#171717]">
+                      {activeNode.count ? activeNode.count.toLocaleString() : (activeSkillDetail?.posting_count?.toLocaleString() || 'N/A')}
+                    </strong>
                   </div>
                 </div>
 

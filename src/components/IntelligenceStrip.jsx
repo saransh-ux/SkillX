@@ -25,7 +25,7 @@ export default function IntelligenceStrip({ onMetricClick }) {
     },
     {
       id: "roles-evolving",
-      targetId: "the-signal",
+      targetId: "career-success",
       code: "METRIC / 03",
       number: "85.8%",
       label: "CAREER MODEL BALANCED ACC",
@@ -35,7 +35,7 @@ export default function IntelligenceStrip({ onMetricClick }) {
     },
     {
       id: "industries-analyzed",
-      targetId: "industry-shift",
+      targetId: "senior-success",
       code: "METRIC / 04",
       number: "92.8%",
       label: "SENIOR MODEL BALANCED ACC",

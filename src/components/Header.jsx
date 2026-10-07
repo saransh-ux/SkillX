@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { ArrowUpRight } from 'lucide-react';
+import { IS_DEMO_MODE } from '../api/client';
+import { useTheme } from '../context/ThemeContext';
 
 export default function Header({ activeSection, onNavigate }) {
+  const { theme, toggleTheme } = useTheme();
   const [scrolled, setScrolled] = useState(false);
   const [currentTime, setCurrentTime] = useState('');
 
@@ -27,12 +30,12 @@ export default function Header({ activeSection, onNavigate }) {
 
   const navItems = [
     { id: 'overview', label: 'OVERVIEW' },
-    { id: 'skill-radar', label: 'SKILL RADAR' },
+    { id: 'skill-radar', label: 'MARKET PULSE' },
     { id: 'skill-genome', label: 'SKILL GENOME' },
-    { id: 'role-evolution', label: 'ROLE MARKET' },
-    { id: 'industry-shift', label: 'GEOGRAPHY' },
-    { id: 'the-signal', label: 'MODEL EVIDENCE' },
-    { id: 'future-scan', label: 'CAREER SCAN' }
+    { id: 'career-success', label: 'CAREER SUCCESS' },
+    { id: 'senior-success', label: 'SENIOR SUCCESS' },
+    { id: 'career-scan', label: 'CAREER SCAN' },
+    { id: 'copilot', label: 'COPILOT' }
   ];
 
   return (
@@ -82,9 +85,22 @@ export default function Header({ activeSection, onNavigate }) {
 
           {/* Right side: Year, Data Status & Telemetry */}
           <div className="hidden lg:flex items-center space-x-4 pl-4 border-l border-[#D8D2C4] text-xs font-mono">
+            {/* Mode Telemetry Indicator */}
+            {IS_DEMO_MODE ? (
+              <div className="flex items-center gap-1.5 px-2 py-0.5 bg-[#FF4D2E]/10 border border-[#FF4D2E]/40 text-[#FF4D2E] text-[10px] font-bold">
+                <span className="w-1.5 h-1.5 bg-[#FF4D2E]"></span>
+                <span>DEMO / MOCK</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 px-2 py-0.5 bg-[#171717] text-[#F4F1EA] text-[10px] font-bold">
+                <span className="w-1.5 h-1.5 bg-[#22c55e] rounded-full"></span>
+                <span>LIVE BACKEND</span>
+              </div>
+            )}
+
             <div className="flex items-center gap-1.5 text-[#171717] font-medium">
               <span className="text-[#66645F]">DATA:</span>
-              <span className="px-1.5 py-0.5 bg-[#171717] text-[#F4F1EA] text-[11px] font-bold">15,841 CORPUS</span>
+              <span className="px-1.5 py-0.5 bg-[#ECE7DE] border border-[#D8D2C4] text-[#171717] text-[11px] font-bold">15,841 CORPUS</span>
             </div>
 
             <div className="flex items-center gap-2">
@@ -100,6 +116,19 @@ export default function Header({ activeSection, onNavigate }) {
             <span className="text-[11px] text-[#66645F] hidden xl:inline">
               {currentTime}
             </span>
+
+            {/* Dark Mode Compact Editorial Toggle */}
+            <button
+              onClick={toggleTheme}
+              aria-label="Toggle theme"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-[#ECE7DE] hover:bg-[#171717] hover:text-[#F4F1EA] border border-[#D8D2C4] text-[#171717] text-[11px] font-mono font-bold tracking-wider uppercase transition-colors cursor-pointer"
+            >
+              {theme === 'dark' ? (
+                <span>☾ DARK</span>
+              ) : (
+                <span>☼ LIGHT</span>
+              )}
+            </button>
           </div>
 
         </div>

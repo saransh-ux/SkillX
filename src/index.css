@@ -3,18 +3,133 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
+  :root, [data-theme="light"] {
     --bg-paper: #F4F1EA;
+    --bg-surface: #ECE7DE;
+    --bg-elevated: #FFFFFF;
     --text-ink: #171717;
     --text-secondary: #66645F;
+    --text-muted: #8E8B83;
     --border-line: #D8D2C4;
+    --border-subtle: #E5DFD3;
     --accent-signal: #FF4D2E;
+    --accent-soft: rgba(255, 77, 46, 0.12);
+    --grid-line: rgba(216, 210, 196, 0.4);
+    --scrollbar-track: #ECE7DE;
+    --scrollbar-thumb: #D8D2C4;
+    --scrollbar-hover: #B8B09F;
+    --svg-grid: #E5DFD3;
+    --svg-faint: #ECE7DE;
+    --svg-text: #66645F;
+    --svg-text-ink: #171717;
+  }
+
+  [data-theme="dark"], .dark {
+    --bg-paper: #11110F;
+    --bg-surface: #181714;
+    --bg-elevated: #201F1B;
+    --text-ink: #F1EEE7;
+    --text-secondary: #A7A39A;
+    --text-muted: #77736B;
+    --border-line: #35332E;
+    --border-subtle: #2A2925;
+    --accent-signal: #FF4D2E;
+    --accent-soft: rgba(255, 77, 46, 0.12);
+    --grid-line: rgba(53, 51, 46, 0.5);
+    --scrollbar-track: #181714;
+    --scrollbar-thumb: #35332E;
+    --scrollbar-hover: #4A4740;
+    --svg-grid: #2A2925;
+    --svg-faint: #181714;
+    --svg-text: #A7A39A;
+    --svg-text-ink: #F1EEE7;
   }
 
   body {
-    background-color: #F4F1EA;
-    color: #171717;
+    background-color: var(--bg-paper);
+    color: var(--text-ink);
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+
+  /* Universal Dark Mode Overrides for strict Editorial Palette */
+  [data-theme="dark"] .bg-\[\#F4F1EA\] {
+    background-color: #11110F !important;
+  }
+  [data-theme="dark"] .bg-\[\#F4F1EA\]\/95 {
+    background-color: rgba(17, 17, 15, 0.95) !important;
+  }
+  [data-theme="dark"] .bg-\[\#F4F1EA\]\/60 {
+    background-color: rgba(24, 23, 20, 0.6) !important;
+  }
+  [data-theme="dark"] .bg-\[\#F4F1EA\]\/50 {
+    background-color: rgba(24, 23, 20, 0.5) !important;
+  }
+  [data-theme="dark"] .bg-\[\#ECE7DE\] {
+    background-color: #181714 !important;
+  }
+  [data-theme="dark"] .bg-\[\#ECE7DE\]\/70 {
+    background-color: rgba(24, 23, 20, 0.7) !important;
+  }
+  [data-theme="dark"] .bg-\[\#ECE7DE\]\/50 {
+    background-color: rgba(24, 23, 20, 0.5) !important;
+  }
+  [data-theme="dark"] .bg-\[\#ECE7DE\]\/40 {
+    background-color: rgba(24, 23, 20, 0.4) !important;
+  }
+  [data-theme="dark"] .bg-\[\#ECE7DE\]\/30 {
+    background-color: rgba(24, 23, 20, 0.3) !important;
+  }
+  [data-theme="dark"] .bg-\[\#ECE7DE\]\/20 {
+    background-color: rgba(24, 23, 20, 0.2) !important;
+  }
+  [data-theme="dark"] .bg-white {
+    background-color: #181714 !important;
+  }
+  [data-theme="dark"] .bg-\[\#171717\] {
+    background-color: #201F1B !important;
+  }
+  [data-theme="dark"] .bg-\[\#E5DFD3\] {
+    background-color: #2A2925 !important;
+  }
+
+  /* Borders */
+  [data-theme="dark"] .border-\[\#D8D2C4\] {
+    border-color: #35332E !important;
+  }
+  [data-theme="dark"] .border-\[\#D8D2C4\]\/60,
+  [data-theme="dark"] .border-\[\#D8D2C4\]\/50,
+  [data-theme="dark"] .border-\[\#D8D2C4\]\/40,
+  [data-theme="dark"] .border-\[\#D8D2C4\]\/30 {
+    border-color: rgba(53, 51, 46, 0.6) !important;
+  }
+  [data-theme="dark"] .border-\[\#171717\] {
+    border-color: #35332E !important;
+  }
+  [data-theme="dark"] .divide-\[\#D8D2C4\] > :not([hidden]) ~ :not([hidden]) {
+    border-color: #35332E !important;
+  }
+
+  /* Text Colors */
+  [data-theme="dark"] .text-\[\#171717\] {
+    color: #F1EEE7 !important;
+  }
+  [data-theme="dark"] .text-\[\#66645F\] {
+    color: #A7A39A !important;
+  }
+  [data-theme="dark"] .text-\[\#8E8B83\] {
+    color: #77736B !important;
+  }
+
+  /* Form Inputs and Sliders in Dark */
+  [data-theme="dark"] input[type="text"],
+  [data-theme="dark"] select {
+    background-color: #181714 !important;
+    color: #F1EEE7 !important;
+    border-color: #35332E !important;
+  }
+  [data-theme="dark"] input[type="range"] {
+    background-color: #35332E !important;
   }
 
   /* Monospace numbers with tabular figures for exact alignment */
@@ -28,31 +143,20 @@
 .editorial-grid {
   background-size: 32px 32px;
   background-image: 
-    linear-gradient(to right, rgba(216, 210, 196, 0.4) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(216, 210, 196, 0.4) 1px, transparent 1px);
+    linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
 }
 
 .editorial-grid-dense {
   background-size: 16px 16px;
   background-image: 
-    linear-gradient(to right, rgba(216, 210, 196, 0.35) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(216, 210, 196, 0.35) 1px, transparent 1px);
+    linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
 }
 
 /* Custom crisp technical borders */
 .border-subtle {
-  border-color: #D8D2C4;
-}
-
-/* Technical crosshair markers for data lab aesthetic */
-.tech-crosshair {
-  position: relative;
-}
-.tech-crosshair::before,
-.tech-crosshair::after {
-  content: '';
-  position: absolute;
-  background-color: #171717;
+  border-color: var(--border-line);
 }
 
 /* Restrained custom scrollbars */
@@ -61,11 +165,11 @@
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #ECE7DE;
+  background: var(--scrollbar-track);
 }
 ::-webkit-scrollbar-thumb {
-  background: #D8D2C4;
+  background: var(--scrollbar-thumb);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #B8B09F;
+  background: var(--scrollbar-hover);
 }

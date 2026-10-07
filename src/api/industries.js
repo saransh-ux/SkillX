@@ -1,13 +1,23 @@
 /**
  * INDUSTRIES API MODULE
- * Implements cross-sector skill penetration and adoption differentials.
+ * Strictly aligned with FastAPI backend endpoints:
+ * - GET /api/industries
+ * - GET /api/industries/{industry}/skills
+ *
+ * Notes: Analytics Jobs does NOT contain an official industry column.
+ * Backend router returns geographic market data with explicit metadata declaring
+ * dimension is LOCATION, not INDUSTRY.
+ *
+ * Honors VITE_DEMO_MODE:
+ * When VITE_DEMO_MODE=true, falls back to local mock data.
+ * When VITE_DEMO_MODE=false, throws real backend errors.
  */
 
-import { apiClient } from './client.js';
+import { apiClient, IS_DEMO_MODE } from './client.js';
 import { mockIndustries } from '../data/mock/mockIndustries.js';
 
 /**
- * Normalizes industry shift dataset.
+ * Normalizes industry dataset for backward-compatible consumers.
  */
 export function normalizeIndustryDataset(raw) {
   if (!raw) return null;
@@ -33,7 +43,7 @@ export function normalizeIndustryDataset(raw) {
 
 /**
  * GET /api/industries/{industry}/skills
- * Retrieves skills demanded within a specific industry vertical.
+ * Retrieves skills demanded within a specific industry vertical (or geographic proxy).
  */
 export async function getIndustrySkills(industry) {
   const encoded = encodeURIComponent(industry);
@@ -41,40 +51,41 @@ export async function getIndustrySkills(industry) {
     const data = await apiClient.get(`/api/industries/${encoded}/skills`);
     return data;
   } catch (error) {
-    console.warn(`[SKILL//X API] /api/industries/${industry}/skills fallback to mock:`, error.message);
-    const indUpper = industry.toUpperCase();
-    const matches = [];
-    mockIndustries.forEach(item => {
-      const sec = item.sectors.find(s => s.name === indUpper || s.code === indUpper);
-      if (sec) {
-        matches.push({
-          skill: item.skillLabel,
-          skillKey: item.skillKey,
-          adoptionRate: sec.adoptionRate,
-          yoyGrowth: sec.yoyGrowth,
-          useCases: sec.primaryUseCases
-        });
-      }
-    });
-    return matches;
+    if (IS_DEMO_MODE) {
+      console.warn(`[SKILL//X DEMO MODE] /api/industries/${industry}/skills fallback to mock:`, error.message);
+      const indUpper = industry.toUpperCase();
+      const matches = [];
+      mockIndustries.forEach(item => {
+        const sec = item.sectors.find(s => s.name === indUpper || s.code === indUpper);
+        if (sec) {
+          matches.push({
+            skill: item.skillLabel,
+            skillKey: item.skillKey,
+            adoptionRate: sec.adoptionRate,
+            yoyGrowth: sec.yoyGrowth,
+            useCases: sec.primaryUseCases
+          });
+        }
+      });
+      return matches;
+    }
+    throw error;
   }
 }
 
 /**
- * GET /api/industries/shift
+ * GET /api/industries
  * Retrieves full comparative cross-sector adoption metrics for all skills.
- * Falls back to mockIndustries when API is unreachable.
  */
 export async function getIndustryShifts() {
   try {
-    const data = await apiClient.get('/api/industries/shift');
-    const list = Array.isArray(data) ? data : data?.industries || [];
-    if (list.length > 0) {
-      return list.map(normalizeIndustryDataset);
-    }
-    return mockIndustries.map(normalizeIndustryDataset);
+    const data = await apiClient.get('/api/industries');
+    return data;
   } catch (error) {
-    console.warn('[SKILL//X API] /api/industries/shift unavailable, falling back to mock dataset:', error.message);
-    return mockIndustries.map(normalizeIndustryDataset);
+    if (IS_DEMO_MODE) {
+      console.warn('[SKILL//X DEMO MODE] /api/industries fallback to mock dataset:', error.message);
+      return mockIndustries.map(normalizeIndustryDataset);
+    }
+    throw error;
   }
 }
